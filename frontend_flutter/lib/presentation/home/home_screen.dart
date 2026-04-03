@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../data/models/user_model.dart';
-import '../../data/models/accident_model.dart';
+import '../../data/models/constat_model.dart';
+import '../../data/models/accident_model.dart'; // Conservé pour compatibilité avec AccidentResultScreen
+import '../../data/services/accident_service.dart';
 import '../constat/screens/constat_form_screen.dart';
 import '../accident/screens/accident_result_screen.dart';
 import '../profile/profile_screen.dart';
@@ -26,17 +28,29 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  final DateTime _dateDebut = DateTime(2025, 1, 1);
-  final DateTime _dateFin = DateTime(2025, 12, 31);
+  late DateTime _dateDebut;
+  late DateTime _dateFin;
 
-  final AccidentModel _lastAccident = AccidentModel(
-    id: "ACC-2026-001",
-    date: DateTime(2026, 2, 15),
-    lieu: "Avenue Habib Bourguiba, Tunis",
-    status: "En cours de traitement",
-    responsabilite: "50% - Responsabilité partagée",
-    immatriculation: "123TU456",
-  );
+  List<ConstatModel> _constats = [];
+  bool _isLoadingConstats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _dateFin = widget.user.dateExpiration ?? DateTime.now().add(const Duration(days: 365));
+    _dateDebut = DateTime(_dateFin.year - 1, _dateFin.month, _dateFin.day);
+    _loadConstats();
+  }
+
+  Future<void> _loadConstats() async {
+    final constats = await AccidentService.getUserConstats(widget.user.assuranceId);
+    if (mounted) {
+      setState(() {
+        _constats = constats;
+        _isLoadingConstats = false;
+      });
+    }
+  }
 
   bool _isInsuranceExpiringSoon() {
     final daysLeft = DateFormatter.getDaysLeft(_dateFin);
@@ -378,8 +392,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRecentAccidentCard() {
+    if (_isLoadingConstats) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_constats.isEmpty) {
+      return const SizedBox.shrink(); // Ne rien afficher si pas d'accident
+    }
+
+    final ConstatModel lastConstat = _constats.first;
+
+    // Convert ConstatModel to AccidentModel for the result screen
+    final AccidentModel adapterModel = AccidentModel(
+      id: lastConstat.accidentId ?? "N/A",
+      date: lastConstat.dateTime ?? DateTime.now(),
+      lieu: lastConstat.lieu ?? "Inconnu",
+      status: "Soumis", // Placeholder puisque l'API ne renvoie pas encore le statut réel
+      responsabilite: "En analyse",
+      immatriculation: lastConstat.immatriculationA ?? "N/A",
+    );
+
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AccidentResultScreen(accident: _lastAccident))),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AccidentResultScreen(accident: adapterModel))),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -411,14 +444,14 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Dernier accident", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
+                  Text("Dernier constat soumis", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
                   const SizedBox(height: 3),
                   Text(
-                    DateFormatter.formatDate(_lastAccident.date),
+                    lastConstat.dateTime != null ? DateFormatter.formatDate(lastConstat.dateTime!) : "Date inconnue",
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   Text(
-                    _lastAccident.lieu,
+                    lastConstat.lieu ?? "Lieu non spécifié",
                     style: TextStyle(color: AppColors.mediumGrey, fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -515,25 +548,14 @@ class _HomeScreenState extends State<HomeScreen> {
         const Text("Mes assurances", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         _buildAssuranceCard(
-          title: "Assurance automobile",
+          title: widget.user.compagnie?.isNotEmpty == true ? widget.user.compagnie! : "Assurance auto",
           icon: Icons.directions_car_outlined,
           color: AppColors.secondaryBlue,
           numero: "AUTO-${widget.user.insuranceNumber}",
-          type: "Tous risques",
-          prime: "850 DT/an",
+          type: "Rattrapé de la BDD",
+          prime: "---",
           dateDebut: _dateDebut,
           dateFin: _dateFin,
-        ),
-        const SizedBox(height: 12),
-        _buildAssuranceCard(
-          title: "Assurance habitation",
-          icon: Icons.home_outlined,
-          color: AppColors.purpleAssistance,
-          numero: "HAB-2025-001",
-          type: "Multirisque",
-          prime: "450 DT/an",
-          dateDebut: DateTime(2025, 1, 1),
-          dateFin: DateTime(2025, 12, 31),
         ),
       ],
     );
@@ -910,13 +932,19 @@ class _HomeScreenState extends State<HomeScreen> {
         ]),
         content: SizedBox(
           width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildHistoryTile("Constat du 15/02/2026", "Accident léger — Traité", AppColors.greenSuccess, Icons.check_circle_outline),
-              _buildHistoryTile("Constat du 03/01/2026", "En cours de traitement", AppColors.orangeWarning, Icons.hourglass_top_rounded),
-            ],
-          ),
+          child: _isLoadingConstats 
+            ? const Center(child: CircularProgressIndicator())
+            : _constats.isEmpty 
+              ? const Text("Aucun constat enregistré.")
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: _constats.map((c) => _buildHistoryTile(
+                    "Constat du ${c.dateTime != null ? DateFormatter.formatDate(c.dateTime!) : '?'}",
+                    c.lieu ?? "Inconnu",
+                    AppColors.secondaryBlue,
+                    Icons.assignment_outlined,
+                  )).toList(),
+                ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Fermer")),

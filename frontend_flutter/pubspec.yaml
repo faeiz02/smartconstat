@@ -38,6 +38,8 @@ dependencies:
   # Dates
   intl: ^0.18.1
   url_launcher: ^6.3.2
+  signature: ^6.3.0
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

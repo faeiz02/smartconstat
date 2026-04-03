@@ -9,6 +9,8 @@ class UserModel {
   final String vehicleModel;
   final String vehiclePlate;
   final String insuranceNumber;
+  final String? compagnie;
+  final DateTime? dateExpiration;
 
   UserModel({
     required this.assuranceId,
@@ -21,6 +23,8 @@ class UserModel {
     required this.vehicleModel,
     required this.vehiclePlate,
     required this.insuranceNumber,
+    this.compagnie,
+    this.dateExpiration,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +39,10 @@ class UserModel {
       vehicleModel: json['vehicle_model'] ?? json['vehicleModel'] ?? '',
       vehiclePlate: json['vehicle_plate'] ?? json['vehiclePlate'] ?? '',
       insuranceNumber: json['insurance_number'] ?? json['insuranceNumber'] ?? '',
+      compagnie: json['compagnie'],
+      dateExpiration: json['dateExpiration'] != null && json['dateExpiration'].toString().isNotEmpty
+          ? DateTime.tryParse(json['dateExpiration'])
+          : null,
     );
   }
 
@@ -50,6 +58,8 @@ class UserModel {
       'vehicle_model': vehicleModel,
       'vehicle_plate': vehiclePlate,
       'insurance_number': insuranceNumber,
+      if (compagnie != null) 'compagnie': compagnie,
+      if (dateExpiration != null) 'dateExpiration': dateExpiration?.toIso8601String(),
     };
   }
 }

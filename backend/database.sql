@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
     vehicle_model VARCHAR(255),
     vehicle_plate VARCHAR(255),
     assurance_id VARCHAR(255) NOT NULL,
+    is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -50,6 +51,7 @@ CREATE TABLE IF NOT EXISTS constats (
     vehicule_modele_a VARCHAR(255),
     immatriculation_a VARCHAR(255),
     pays_a VARCHAR(255),
+    sens_suivi_a VARCHAR(255),
     
     -- Conducteur B (Adverse)
     assureur_b VARCHAR(255),
@@ -61,21 +63,30 @@ CREATE TABLE IF NOT EXISTS constats (
     vehicule_modele_b VARCHAR(255),
     immatriculation_b VARCHAR(255),
     pays_b VARCHAR(255),
+    sens_suivi_b VARCHAR(255),
     
     -- Détails
+    temoins TEXT,
+    blesses BOOLEAN DEFAULT FALSE,
+    degats_materiels_autres BOOLEAN DEFAULT FALSE,
+    intervention_police BOOLEAN DEFAULT FALSE,
     circonstances TEXT,
     point_choc_initial VARCHAR(255),
     degats_apparents_a VARCHAR(255),
     degats_apparents_b VARCHAR(255),
     autres_degats TEXT,
     observations TEXT,
+    croquis_path VARCHAR(255),
+    signature_a_path VARCHAR(255),
+    signature_b_path VARCHAR(255),
+    photos_paths TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     CONSTRAINT fk_user_constat FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- 4. Table Tokens (pour la réinitialisation de mot de passe)
-CREATE TABLE IF NOT EXISTS password_reset_token (
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     token VARCHAR(255) NOT NULL UNIQUE,
     user_id BIGINT NOT NULL,

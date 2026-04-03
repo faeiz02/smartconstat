@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:provider/provider.dart';
+import 'package:signature/signature.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../data/models/constat_model.dart';
 import '../../../data/services/accident_service.dart';
 import '../../../providers/auth_provider.dart';
@@ -54,6 +57,25 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
   int? _selectedChocPosition;
   bool _degatsMateriels = false;
   bool _blesses = false;
+  bool _interventionPolice = false;
+
+  // Signatures & Croquis
+  final SignatureController _croquisController = SignatureController(
+    penStrokeWidth: 3,
+    penColor: Colors.black,
+    exportBackgroundColor: Colors.white,
+  );
+  
+  final SignatureController _signatureControllerA = SignatureController(
+    penStrokeWidth: 2,
+    penColor: Colors.blue,
+    exportBackgroundColor: Colors.white,
+  );
+  final SignatureController _signatureControllerB = SignatureController(
+    penStrokeWidth: 2,
+    penColor: Colors.blue,
+    exportBackgroundColor: Colors.white,
+  );
 
   // Circonstances
   Map<String, bool> circonstancesA = {
@@ -139,7 +161,7 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
             );
           },
           onStepContinue: () {
-            if (_currentStep < 5) setState(() => _currentStep++);
+            if (_currentStep < 7) setState(() => _currentStep++);
           },
           onStepCancel: () {
             if (_currentStep > 0) setState(() => _currentStep--);
@@ -152,6 +174,8 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
             _buildStep(3, "Point de choc", Icons.gps_fixed_outlined, _buildChocSection()),
             _buildStep(4, "Dégâts & Photos", Icons.camera_alt_outlined, _buildDegatsSection()),
             _buildStep(5, "Observations", Icons.note_alt_outlined, _buildObservationsSection()),
+            _buildStep(6, "Croquis", Icons.draw_outlined, _buildCroquisSection()),
+            _buildStep(7, "Signatures", Icons.edit_document, _buildSignaturesSection()),
           ],
         ),
       ),
@@ -190,7 +214,7 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
         const SizedBox(height: 12),
         _buildField(_lieuController, "Lieu de l'accident", null, Icons.location_on_outlined),
         const SizedBox(height: 12),
-        _buildField(_temoinsController, "Témoins (optionnel)", "Nom, téléphone", Icons.people_outline),
+        _buildField(_temoinsController, "Témoins", "Nom, adresse, téléphone", Icons.people_outline, maxLines: 2),
       ],
     );
   }
@@ -422,8 +446,67 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
           activeColor: AppColors.redDanger,
           contentPadding: EdgeInsets.zero,
         ),
+        CheckboxListTile(
+          title: const Text("Intervention des autorités (Police, Garde N.)", style: TextStyle(fontSize: 13)),
+          value: _interventionPolice,
+          onChanged: (v) => setState(() => _interventionPolice = v!),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          activeColor: AppColors.secondaryBlue,
+          contentPadding: EdgeInsets.zero,
+        ),
         const SizedBox(height: 10),
         _buildField(_observationsController, "Observations complémentaires", "Témoins, circonstances...", null, maxLines: 3),
+      ],
+    );
+  }
+
+  // ─── STEP 7 : Croquis ───
+  Widget _buildCroquisSection() {
+    return _buildSectionCard(
+      children: [
+        const Text("Dessinez le croquis de l'accident", style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(border: Border.all(color: AppColors.lightGrey), borderRadius: BorderRadius.circular(12)),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Signature(controller: _croquisController, height: 250, backgroundColor: Colors.white),
+          ),
+        ),
+        TextButton.icon(
+          onPressed: () => _croquisController.clear(),
+          icon: const Icon(Icons.clear, size: 16),
+          label: const Text("Effacer"),
+        ),
+      ],
+    );
+  }
+
+  // ─── STEP 8 : Signatures ───
+  Widget _buildSignaturesSection() {
+    return _buildSectionCard(
+      children: [
+        const Text("Signature Conducteur A", style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(border: Border.all(color: AppColors.secondaryBlue), borderRadius: BorderRadius.circular(12)),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Signature(controller: _signatureControllerA, height: 120, backgroundColor: Colors.grey.shade50),
+          ),
+        ),
+        TextButton(onPressed: () => _signatureControllerA.clear(), child: const Text("Effacer A")),
+        const SizedBox(height: 16),
+        const Text("Signature Conducteur B", style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(border: Border.all(color: AppColors.orangeWarning), borderRadius: BorderRadius.circular(12)),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Signature(controller: _signatureControllerB, height: 120, backgroundColor: Colors.grey.shade50),
+          ),
+        ),
+        TextButton(onPressed: () => _signatureControllerB.clear(), child: const Text("Effacer B")),
       ],
     );
   }
@@ -454,7 +537,17 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
   }
 
   // ─── SAVE ───
-  void _saveConstat() {
+  Future<File?> _exportSignature(SignatureController controller, String prefix) async {
+    if (controller.isEmpty) return null;
+    final Uint8List? data = await controller.toPngBytes();
+    if (data == null) return null;
+    final tempDir = await getTemporaryDirectory();
+    File file = await File('${tempDir.path}/${prefix}_${DateTime.now().millisecondsSinceEpoch}.png').create();
+    file.writeAsBytesSync(data);
+    return file;
+  }
+
+  void _saveConstat() async {
     if (_formKey.currentState!.validate()) {
       List<String> circA = circonstancesA.entries.where((e) => e.value).map((e) => e.key).toList();
       List<String> circB = circonstancesB.entries.where((e) => e.value).map((e) => e.key).toList();
@@ -471,6 +564,7 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
         vehiculeModeleA: _modeleAController.text,
         immatriculationA: _immatriculationAController.text,
         paysA: _paysAController.text,
+        sensSuiviA: "Non renseigné",
         assureurB: _assureurBController.text,
         contratB: _contratBController.text,
         nomB: _nomBController.text,
@@ -480,11 +574,16 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
         vehiculeModeleB: _modeleBController.text,
         immatriculationB: _immatriculationBController.text,
         paysB: _paysBController.text,
+        sensSuiviB: "Non renseigné",
         pointChocInitial: _selectedChocPosition?.toString(),
         degatsApparentsA: _degatsAcontroller.text,
         degatsApparentsB: _degatsBcontroller.text,
         circonstances: [...circA, ...circB],
         observations: _observationsController.text,
+        temoins: _temoinsController.text.isNotEmpty ? _temoinsController.text : null,
+        blesses: _blesses,
+        degatsMaterielsAutres: _degatsMateriels,
+        interventionPolice: _interventionPolice,
       );
 
       showDialog(
@@ -499,7 +598,7 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
               children: [
                 CircularProgressIndicator(color: AppColors.secondaryBlue),
                 SizedBox(height: 16),
-                Text("Envoi en cours...", style: TextStyle(fontWeight: FontWeight.w600)),
+                Text("Envoi des données...", style: TextStyle(fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -509,31 +608,55 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final assuranceId = authProvider.user?.assuranceId ?? "AT123456";
 
-      AccidentService.saveConstat(assuranceId, constat).then((result) {
-        Navigator.pop(context);
-        if (result["success"]) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(children: [
-                Icon(Icons.check_circle, color: Colors.white, size: 18),
-                SizedBox(width: 8),
-                Expanded(child: Text("Constat envoyé au serveur avec succès!")),
-              ]),
-              backgroundColor: AppColors.greenSuccess,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
-          Future.delayed(const Duration(seconds: 2), () => Navigator.pop(context));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Échec de l'envoi : ${result["message"]}"),
-              backgroundColor: AppColors.redDanger,
-            ),
+      final result = await AccidentService.saveConstat(assuranceId, constat);
+      
+      if (result["success"]) {
+        String accidentId = result["data"]["accidentId"] ?? result["data"]["id"] ?? "";
+        
+        if (accidentId.isNotEmpty) {
+          // Exporter les signatures et croquis
+          File? croquisFile = await _exportSignature(_croquisController, "croquis");
+          File? sigAFile = await _exportSignature(_signatureControllerA, "sigA");
+          File? sigBFile = await _exportSignature(_signatureControllerB, "sigB");
+
+          List<String> photosPaths = _photos.map((f) => f.path).toList();
+
+          await AccidentService.uploadConstatFiles(
+            accidentId,
+            croquisFile?.path,
+            sigAFile?.path,
+            sigBFile?.path,
+            photosPaths
           );
         }
-      });
+        
+        if (mounted) {
+            Navigator.pop(context); // Close loading dialog
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(child: Text("Constat et fichiers envoyés avec succès!")),
+                ]),
+                backgroundColor: AppColors.greenSuccess,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+            Future.delayed(const Duration(seconds: 2), () => Navigator.pop(context));
+        }
+      } else {
+        if (mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Échec de l'envoi : ${result["message"]}"),
+                backgroundColor: AppColors.redDanger,
+              ),
+            );
+        }
+      }
     }
   }
 }

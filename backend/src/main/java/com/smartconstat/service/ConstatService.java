@@ -45,6 +45,12 @@ public class ConstatService {
                 .degatsApparentsB((String) data.get("degatsApparentsB"))
                 .autresDegats((String) data.get("autresDegats"))
                 .observations((String) data.get("observations"))
+                .sensSuiviA((String) data.get("sensSuiviA"))
+                .sensSuiviB((String) data.get("sensSuiviB"))
+                .temoins((String) data.get("temoins"))
+                .blesses(Boolean.TRUE.equals(data.get("blesses")))
+                .degatsMaterielsAutres(Boolean.TRUE.equals(data.get("degatsMaterielsAutres")))
+                .interventionPolice(Boolean.TRUE.equals(data.get("interventionPolice")))
                 .build();
 
         // Handle circonstances list → comma-separated string
@@ -57,8 +63,20 @@ public class ConstatService {
 
         return Map.of(
                 "success", true,
-                "data", Map.of("id", constat.getId())
+                "data", Map.of("accidentId", constat.getId().toString())
         );
+    }
+
+    public void saveConstatFiles(Long id, String croquisPath, String signatureAPath, String signatureBPath, String photosPaths) {
+        Optional<Constat> opt = constatRepository.findById(id);
+        if (opt.isPresent()) {
+            Constat c = opt.get();
+            if (croquisPath != null) c.setCroquisPath(croquisPath);
+            if (signatureAPath != null) c.setSignatureAPath(signatureAPath);
+            if (signatureBPath != null) c.setSignatureBPath(signatureBPath);
+            if (photosPaths != null) c.setPhotosPaths(photosPaths);
+            constatRepository.save(c);
+        }
     }
 
     public List<Map<String, Object>> getUserConstats(User user) {
@@ -67,7 +85,7 @@ public class ConstatService {
 
         for (Constat c : constats) {
             Map<String, Object> map = new LinkedHashMap<>();
-            map.put("id", c.getId());
+            map.put("accidentId", c.getId() != null ? c.getId().toString() : null);
             map.put("lieu", c.getLieu());
             map.put("dateTime", c.getDateTime() != null ? c.getDateTime().toString() : null);
             map.put("assureurA", c.getAssureurA());
@@ -93,6 +111,16 @@ public class ConstatService {
             map.put("degatsApparentsB", c.getDegatsApparentsB());
             map.put("autresDegats", c.getAutresDegats());
             map.put("observations", c.getObservations());
+            map.put("sensSuiviA", c.getSensSuiviA());
+            map.put("sensSuiviB", c.getSensSuiviB());
+            map.put("temoins", c.getTemoins());
+            map.put("blesses", c.isBlesses());
+            map.put("degatsMaterielsAutres", c.isDegatsMaterielsAutres());
+            map.put("interventionPolice", c.isInterventionPolice());
+            map.put("croquisPath", c.getCroquisPath());
+            map.put("signatureAPath", c.getSignatureAPath());
+            map.put("signatureBPath", c.getSignatureBPath());
+            map.put("photosPaths", c.getPhotosPaths());
             // Convert comma-separated circonstances back to list
             if (c.getCirconstances() != null && !c.getCirconstances().isEmpty()) {
                 map.put("circonstances", Arrays.asList(c.getCirconstances().split(",")));

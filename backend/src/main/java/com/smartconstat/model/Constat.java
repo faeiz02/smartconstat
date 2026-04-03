@@ -30,6 +30,7 @@ public class Constat {
     private String vehiculeModeleA;
     private String immatriculationA;
     private String paysA;
+    private String sensSuiviA;
 
     // Véhicule B
     private String assureurB;
@@ -41,6 +42,7 @@ public class Constat {
     private String vehiculeModeleB;
     private String immatriculationB;
     private String paysB;
+    private String sensSuiviB;
 
     // Dégâts
     private String pointChocInitial;
@@ -59,6 +61,18 @@ public class Constat {
 
     @Column(length = 2000)
     private String observations;
+
+    private String temoins;
+    private boolean blesses = false;
+    private boolean degatsMaterielsAutres = false;
+    private boolean interventionPolice = false;
+
+    private String croquisPath;
+    private String signatureAPath;
+    private String signatureBPath;
+    
+    @Column(length = 2000)
+    private String photosPaths;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;

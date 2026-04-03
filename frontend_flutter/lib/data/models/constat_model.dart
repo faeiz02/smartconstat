@@ -14,6 +14,7 @@ class ConstatModel {
   final String? vehiculeModeleA;
   final String? immatriculationA;
   final String? paysA;
+  final String? sensSuiviA;
 
   // Véhicule B
   final String? assureurB;
@@ -25,6 +26,7 @@ class ConstatModel {
   final String? vehiculeModeleB;
   final String? immatriculationB;
   final String? paysB;
+  final String? sensSuiviB;
 
   // Dégâts
   final String? pointChocInitial;
@@ -35,6 +37,11 @@ class ConstatModel {
   // Observations
   final List<String>? circonstances;
   final String? observations;
+
+  final String? temoins;
+  final bool? blesses;
+  final bool? degatsMaterielsAutres;
+  final bool? interventionPolice;
 
   ConstatModel({
     this.accidentId,
@@ -49,6 +56,7 @@ class ConstatModel {
     this.vehiculeModeleA,
     this.immatriculationA,
     this.paysA,
+    this.sensSuiviA,
     this.assureurB,
     this.contratB,
     this.nomB,
@@ -58,12 +66,17 @@ class ConstatModel {
     this.vehiculeModeleB,
     this.immatriculationB,
     this.paysB,
+    this.sensSuiviB,
     this.pointChocInitial,
     this.degatsApparentsA,
     this.degatsApparentsB,
     this.autresDegats,
     this.circonstances,
     this.observations,
+    this.temoins,
+    this.blesses,
+    this.degatsMaterielsAutres,
+    this.interventionPolice,
   });
 
   factory ConstatModel.fromJson(Map<String, dynamic> json) {
@@ -80,6 +93,7 @@ class ConstatModel {
       vehiculeModeleA: json['vehiculeModeleA'],
       immatriculationA: json['immatriculationA'],
       paysA: json['paysA'],
+      sensSuiviA: json['sensSuiviA'],
       assureurB: json['assureurB'],
       contratB: json['contratB'],
       nomB: json['nomB'],
@@ -89,12 +103,17 @@ class ConstatModel {
       vehiculeModeleB: json['vehiculeModeleB'],
       immatriculationB: json['immatriculationB'],
       paysB: json['paysB'],
+      sensSuiviB: json['sensSuiviB'],
       pointChocInitial: json['pointChocInitial'],
       degatsApparentsA: json['degatsApparentsA'],
       degatsApparentsB: json['degatsApparentsB'],
       autresDegats: json['autresDegats'],
       circonstances: json['circonstances'] != null ? List<String>.from(json['circonstances']) : null,
       observations: json['observations'],
+      temoins: json['temoins'],
+      blesses: json['blesses'],
+      degatsMaterielsAutres: json['degatsMaterielsAutres'],
+      interventionPolice: json['interventionPolice'],
     );
   }
 
@@ -112,6 +131,7 @@ class ConstatModel {
       'vehiculeModeleA': vehiculeModeleA,
       'immatriculationA': immatriculationA,
       'paysA': paysA,
+      'sensSuiviA': sensSuiviA,
       'assureurB': assureurB,
       'contratB': contratB,
       'nomB': nomB,
@@ -121,12 +141,17 @@ class ConstatModel {
       'vehiculeModeleB': vehiculeModeleB,
       'immatriculationB': immatriculationB,
       'paysB': paysB,
+      'sensSuiviB': sensSuiviB,
       'pointChocInitial': pointChocInitial,
       'degatsApparentsA': degatsApparentsA,
       'degatsApparentsB': degatsApparentsB,
       'autresDegats': autresDegats,
       'circonstances': circonstances,
       'observations': observations,
+      'temoins': temoins,
+      'blesses': blesses,
+      'degatsMaterielsAutres': degatsMaterielsAutres,
+      'interventionPolice': interventionPolice,
     };
   }
 }

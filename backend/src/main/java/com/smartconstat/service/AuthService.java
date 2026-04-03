@@ -134,6 +134,12 @@ public class AuthService {
         fakeUserMap.put("vehicle_model", req.getVehicleModel() != null ? req.getVehicleModel() : "");
         fakeUserMap.put("vehicle_plate", req.getVehiclePlate() != null ? req.getVehiclePlate() : "");
         fakeUserMap.put("insurance_number", req.getAssuranceId());
+        
+        if (assuranceOpt.isPresent()) {
+            Assurance assurance = assuranceOpt.get();
+            fakeUserMap.put("compagnie", assurance.getCompagnie() != null ? assurance.getCompagnie() : "");
+            fakeUserMap.put("dateExpiration", assurance.getDateExpiration() != null ? assurance.getDateExpiration().toString() : "");
+        }
 
         // Don't send token yet, wait for verification
         return AuthResponse.builder()
@@ -330,6 +336,13 @@ public class AuthService {
         map.put("vehicle_model", user.getVehicleModel() != null ? user.getVehicleModel() : "");
         map.put("vehicle_plate", user.getVehiclePlate() != null ? user.getVehiclePlate() : "");
         map.put("insurance_number", user.getAssuranceId());
+
+        if (user.getAssuranceId() != null) {
+            assuranceRepository.findByAssuranceId(user.getAssuranceId()).ifPresent(assurance -> {
+                map.put("compagnie", assurance.getCompagnie() != null ? assurance.getCompagnie() : "");
+                map.put("dateExpiration", assurance.getDateExpiration() != null ? assurance.getDateExpiration().toString() : "");
+            });
+        }
         return map;
     }
 }

@@ -45,6 +45,56 @@ class AccidentService {
     }
   }
 
+  static Future<Map<String, dynamic>> uploadConstatFiles(
+      String accidentId, 
+      String? croquisPath, 
+      String? sigAPath, 
+      String? sigBPath, 
+      List<String>? photosPaths) async {
+    try {
+      final token = await SecureStorageService.getToken();
+      var request = http.MultipartRequest('POST', Uri.parse('${ApiConstants.constats}/$accidentId/uploads'));
+      request.headers['Authorization'] = 'Bearer $token';
+
+      if (croquisPath != null && croquisPath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath('croquis', croquisPath));
+      }
+      if (sigAPath != null && sigAPath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath('signatureA', sigAPath));
+      }
+      if (sigBPath != null && sigBPath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath('signatureB', sigBPath));
+      }
+      if (photosPaths != null && photosPaths.isNotEmpty) {
+        for (var path in photosPaths) {
+          request.files.add(await http.MultipartFile.fromPath('photos', path));
+        }
+      }
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return {
+          "success": true,
+          "message": data['message'] ?? "Fichiers téléchargés"
+        };
+      } else {
+        return {
+          "success": false,
+          "message": "Erreur upload serveur: ${response.statusCode}"
+        };
+      }
+    } catch (e) {
+      print("❌ Erreur uploadConstatFiles: $e");
+      return {
+        "success": false,
+        "message": e.toString(),
+      };
+    }
+  }
+
   static Future<List<ConstatModel>> getUserConstats(String assuranceId) async {
     try {
       final headers = await _authHeaders();
@@ -59,7 +109,8 @@ class AccidentService {
             .map((json) => ConstatModel.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
-        print("❌ Erreur getUserConstats: ${response.statusCode}");
+        print("❌ Erreur getUserConstats: ${response.statusCode} - Body: ${response.body}");
+        print("🔍 Headers sent: $headers");
         return [];
       }
     } catch (e) {

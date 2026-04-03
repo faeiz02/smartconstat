@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/models/user_model.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -68,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen>
 
         if (response.containsKey('user')) {
           final user = UserModel.fromJson(response['user']);
+          await SecureStorageService.saveToken(response['token']);
           context.read<AuthProvider>().setAuthenticatedUser(user);
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) context.go('/home', extra: user);
