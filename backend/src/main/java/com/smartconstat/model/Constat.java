@@ -1,0 +1,70 @@
+package com.smartconstat.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "constats")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Constat {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    private String lieu;
+    private LocalDateTime dateTime;
+
+    // Véhicule A
+    private String assureurA;
+    private String contratA;
+    private String nomA;
+    private String prenomA;
+    private String adresseA;
+    private String vehiculeMarqueA;
+    private String vehiculeModeleA;
+    private String immatriculationA;
+    private String paysA;
+
+    // Véhicule B
+    private String assureurB;
+    private String contratB;
+    private String nomB;
+    private String prenomB;
+    private String adresseB;
+    private String vehiculeMarqueB;
+    private String vehiculeModeleB;
+    private String immatriculationB;
+    private String paysB;
+
+    // Dégâts
+    private String pointChocInitial;
+
+    @Column(length = 1000)
+    private String degatsApparentsA;
+
+    @Column(length = 1000)
+    private String degatsApparentsB;
+
+    @Column(length = 1000)
+    private String autresDegats;
+
+    @Column(length = 2000)
+    private String circonstances; // stored as comma-separated
+
+    @Column(length = 2000)
+    private String observations;
+
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+}

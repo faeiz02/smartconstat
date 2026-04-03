@@ -1,0 +1,52 @@
+name: smart_accident_app
+description: Application mobile de constat d'accident automobile avec IA
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Pour les icônes Material Design
+  cupertino_icons: ^1.0.6
+
+  # Navigation
+  go_router: ^13.0.0
+
+  # Appels API
+  http: ^1.1.0
+
+  # Stockage sécurisé
+  flutter_secure_storage: ^9.0.0
+
+  # Gestion d'état
+  provider: ^6.1.1
+
+  # Photos
+  image_picker: ^1.0.4
+
+  # Localisation GPS
+  geolocator: ^10.1.0
+
+  # Permissions
+  permission_handler: ^11.0.1
+
+  # Dates
+  intl: ^0.18.1
+  url_launcher: ^6.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+
+  # Assets (images, icônes)
+  assets:
+    - assets/images/

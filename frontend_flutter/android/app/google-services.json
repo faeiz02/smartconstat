@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "912945265555",
+    "project_id": "smartconstat2",
+    "storage_bucket": "smartconstat2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:912945265555:android:6a976896a6959aaed78666",
+        "android_client_info": {
+          "package_name": "com.smartaccident.smart_accident"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApGBjPDRof9QEV4FidWUFGDNXvX6KbSsY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
