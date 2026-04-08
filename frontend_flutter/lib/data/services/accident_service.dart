@@ -8,6 +8,9 @@ class AccidentService {
 
   static Future<Map<String, String>> _authHeaders() async {
     final token = await SecureStorageService.getToken();
+    if (token == null) {
+      throw Exception("JWT Token is missing. Authentication required.");
+    }
     return {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',

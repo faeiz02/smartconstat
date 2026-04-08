@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/accident_model.dart';
+import '../../../data/models/constat_model.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/pdf_service.dart';
 import '../../../utils/date_formatter.dart';
 
 class AccidentResultScreen extends StatelessWidget {
@@ -26,7 +28,7 @@ class AccidentResultScreen extends StatelessWidget {
             const SizedBox(height: 14),
             _buildResponsabiliteCard(),
             const SizedBox(height: 14),
-            _buildDocumentsCard(),
+            _buildDocumentsCard(context),
           ],
         ),
       ),
@@ -143,7 +145,7 @@ class AccidentResultScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDocumentsCard() {
+  Widget _buildDocumentsCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -155,38 +157,100 @@ class AccidentResultScreen extends StatelessWidget {
         children: [
           const Text("Documents", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
-          _buildDocRow(Icons.picture_as_pdf_outlined, AppColors.redDanger, "Constat signé", "PDF — 2.5 MB", Icons.download_outlined),
+          _buildDocRow(
+            Icons.picture_as_pdf_outlined, 
+            AppColors.redDanger, 
+            "Constat signé", 
+            "PDF — Générer maintenant", 
+            Icons.download_outlined,
+            onTap: () {
+              _generatePDF(context);
+            },
+          ),
           const Divider(height: 20),
-          _buildDocRow(Icons.image_outlined, AppColors.secondaryBlue, "Photos de l'accident", "4 photos", Icons.visibility_outlined),
+          _buildDocRow(
+            Icons.image_outlined, 
+            AppColors.secondaryBlue, 
+            "Photos de l'accident", 
+            "4 photos", 
+            Icons.visibility_outlined,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDocRow(IconData icon, Color color, String title, String sub, IconData action) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: color, size: 22),
+  void _generatePDF(BuildContext context) async {
+    // Show loading
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Génération du PDF en cours...")),
+    );
+
+    // Mock ConstatModel populated with AccidentModel data
+    final constat = ConstatModel(
+      accidentId: accident.id,
+      dateTime: accident.date,
+      lieu: accident.lieu,
+      immatriculationA: accident.immatriculation,
+      nomA: "Utilisateur",
+      prenomA: "Actuel",
+      assureurA: "Assurance Protection+",
+      contratA: "POL-12345678",
+      adresseA: "123 Rue de la Paix, Tunis",
+      vehiculeMarqueA: "Toyota",
+      vehiculeModeleA: "Yaris",
+      paysA: "Tunisie",
+      sensSuiviA: "Nord",
+      
+      // Part B (Tiers)
+      nomB: "Ben Ali",
+      prenomB: "Ahmed",
+      immatriculationB: "123 TUN 4567",
+      assureurB: "Général Assurance",
+      contratB: "POL-87654321",
+      adresseB: "45 Avenue Habib Bourguiba",
+      
+      blesses: false,
+      interventionPolice: false,
+      observations: "Collision latérale au carrefour.",
+      circonstances: ["Changement de file"],
+    );
+
+    // Generate PDF
+    await PdfService.generateAccidentReport(constat, null); // Pass null for croquis in this history view unless we have DB fetch
+  }
+
+  Widget _buildDocRow(IconData icon, Color color, String title, String sub, IconData action, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  Text(sub, style: TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+              child: Icon(action, color: color, size: 18),
+            ),
+          ],
         ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              Text(sub, style: TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
-          child: Icon(action, color: color, size: 18),
-        ),
-      ],
+      ),
     );
   }
 }

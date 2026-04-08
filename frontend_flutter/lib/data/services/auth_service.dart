@@ -85,6 +85,10 @@ class AuthService {
         if (data['token'] != null) {
           await SecureStorageService.saveToken(data['token']);
         }
+        // Stocker le userId
+        if (data['user'] != null && data['user']['id'] != null) {
+          await SecureStorageService.saveUserId(data['user']['id'] as int);
+        }
         return {
           "success": true,
           "message": data['message'] ?? "Compte créé avec succès",
@@ -185,6 +189,14 @@ class AuthService {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (response.statusCode == 200 && data['success'] == true) {
+        // Sauvegarder le token pour les requêtes futures
+        if (data['token'] != null) {
+          await SecureStorageService.saveToken(data['token']);
+        }
+        // Stocker le userId
+        if (data['user'] != null && data['user']['id'] != null) {
+          await SecureStorageService.saveUserId(data['user']['id'] as int);
+        }
         return {
           "success": true,
           "token": data['token'],

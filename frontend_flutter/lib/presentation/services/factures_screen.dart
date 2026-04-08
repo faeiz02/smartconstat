@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/services/api_service_features.dart';
 
-class FacturesScreen extends StatelessWidget {
+class FacturesScreen extends StatefulWidget {
   const FacturesScreen({super.key});
+
+  @override
+  State<FacturesScreen> createState() => _FacturesScreenState();
+}
+
+class _FacturesScreenState extends State<FacturesScreen> {
+  late Future<List<dynamic>> _facturesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _facturesFuture = ApiServiceFeatures.getFactures();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,17 +27,40 @@ class FacturesScreen extends StatelessWidget {
         backgroundColor: AppColors.brownFactures,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(20))),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildHeaderCard(),
-            const SizedBox(height: 16),
-            _buildStatsCards(),
-            const SizedBox(height: 16),
-            _buildFacturesList(),
-          ],
-        ),
+      body: FutureBuilder<List<dynamic>>(
+        future: _facturesFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: AppColors.brownFactures));
+          } else if (snapshot.hasError) {
+            return const Center(child: Text("Erreur de chargement"));
+          }
+
+          final factures = snapshot.data ?? [];
+          // Calculer les stats
+          double totalPaye = 0;
+          double aPayer = 0;
+          for (var f in factures) {
+             if (f['statut'] == 'Payée') {
+               totalPaye += (f['montant'] as num).toDouble();
+             } else {
+               aPayer += (f['montant'] as num).toDouble();
+             }
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildHeaderCard(),
+                const SizedBox(height: 16),
+                _buildStatsCards(totalPaye, aPayer),
+                const SizedBox(height: 16),
+                _buildFacturesList(factures),
+              ],
+            ),
+          );
+        }
       ),
     );
   }
@@ -58,12 +95,12 @@ class FacturesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsCards() {
+  Widget _buildStatsCards(double totalPaye, double aPayer) {
     return Row(
       children: [
-        Expanded(child: _buildStatCard("Total payé", "2 550 DT", Icons.check_circle_outline, AppColors.greenSuccess)),
+        Expanded(child: _buildStatCard("Total payé", "${totalPaye.toStringAsFixed(0)} DT", Icons.check_circle_outline, AppColors.greenSuccess)),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard("À payer", "850 DT", Icons.hourglass_top_rounded, AppColors.orangeWarning)),
+        Expanded(child: _buildStatCard("À payer", "${aPayer.toStringAsFixed(0)} DT", Icons.hourglass_top_rounded, AppColors.orangeWarning)),
       ],
     );
   }
@@ -86,13 +123,13 @@ class FacturesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFacturesList() {
-    final factures = [
-      {"mois": "Mars 2026", "montant": "850 DT", "date": "05/03/2026", "statut": "À payer"},
-      {"mois": "Février 2026", "montant": "850 DT", "date": "05/02/2026", "statut": "Payée"},
-      {"mois": "Janvier 2026", "montant": "850 DT", "date": "05/01/2026", "statut": "Payée"},
-      {"mois": "Décembre 2025", "montant": "850 DT", "date": "05/12/2025", "statut": "Payée"},
-    ];
+  Widget _buildFacturesList(List<dynamic> factures) {
+    if (factures.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24.0),
+        child: Text("Aucune facture trouvée."),
+      );
+    }
 
     return Column(children: factures.map((f) {
       final isPaid = f["statut"] == "Payée";
@@ -117,14 +154,14 @@ class FacturesScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(f["mois"]!, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                  Text("Échéance: ${f["date"]}", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
+                  Text("Échéance: ${f["echeance"]}", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(f["montant"]!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                Text("${f["montant"]} DT", style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),

@@ -70,7 +70,7 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.redDanger, width: 1),
         ),
         hintStyle: TextStyle(
-          color: AppColors.mediumGrey.withOpacity(0.7),
+          color: AppColors.mediumGrey.withValues(alpha: 0.7),
           fontSize: 14,
         ),
         labelStyle: const TextStyle(
@@ -154,7 +154,7 @@ class AppTheme {
       // ─── Chips ───
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.scaffold,
-        selectedColor: AppColors.secondaryBlue.withOpacity(0.15),
+        selectedColor: AppColors.secondaryBlue.withValues(alpha: 0.15),
         labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -164,7 +164,7 @@ class AppTheme {
 
       // ─── Divider ───
       dividerTheme: DividerThemeData(
-        color: AppColors.lightGrey.withOpacity(0.7),
+        color: AppColors.lightGrey.withValues(alpha: 0.7),
         thickness: 1,
         space: 24,
       ),

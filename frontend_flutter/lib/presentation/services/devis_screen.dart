@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/services/api_service_features.dart';
 
 class DevisScreen extends StatefulWidget {
   const DevisScreen({super.key});
@@ -10,6 +11,31 @@ class DevisScreen extends StatefulWidget {
 
 class _DevisScreenState extends State<DevisScreen> {
   String? _selected;
+  bool _isLoading = false;
+
+  void _submitDevis() async {
+    if (_selected == null) return;
+    
+    setState(() => _isLoading = true);
+    final success = await ApiServiceFeatures.requestDevis(_selected!);
+    setState(() => _isLoading = false);
+
+    if (success) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Votre demande de devis a été envoyée !"), backgroundColor: AppColors.greenSuccess),
+      );
+      // Wait a bit and pop
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) Navigator.pop(context);
+      });
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erreur lors de l'envoi de la demande."), backgroundColor: AppColors.redDanger),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,13 +113,15 @@ class _DevisScreenState extends State<DevisScreen> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: _selected != null ? () {} : null,
+              onPressed: (_selected != null && !_isLoading) ? _submitDevis : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.pinkDevis,
                 disabledBackgroundColor: AppColors.lightGrey,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text("Obtenir un devis", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              child: _isLoading 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                : const Text("Obtenir un devis", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
             ),
           ),
         ],

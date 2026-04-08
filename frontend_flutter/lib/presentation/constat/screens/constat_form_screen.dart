@@ -9,6 +9,7 @@ import '../../../data/models/constat_model.dart';
 import '../../../data/services/accident_service.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/constants/app_colors.dart';
+import '../widgets/smart_canvas_widget.dart';
 
 class ConstatFormScreen extends StatefulWidget {
   const ConstatFormScreen({super.key});
@@ -59,12 +60,8 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
   bool _blesses = false;
   bool _interventionPolice = false;
 
-  // Signatures & Croquis
-  final SignatureController _croquisController = SignatureController(
-    penStrokeWidth: 3,
-    penColor: Colors.black,
-    exportBackgroundColor: Colors.white,
-  );
+  // Croquis - Smart Canvas
+  final SmartCanvasController _croquisCanvasController = SmartCanvasController();
   
   final SignatureController _signatureControllerA = SignatureController(
     penStrokeWidth: 2,
@@ -464,20 +461,22 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
   Widget _buildCroquisSection() {
     return _buildSectionCard(
       children: [
-        const Text("Dessinez le croquis de l'accident", style: TextStyle(fontWeight: FontWeight.w700)),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(border: Border.all(color: AppColors.lightGrey), borderRadius: BorderRadius.circular(12)),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Signature(controller: _croquisController, height: 250, backgroundColor: Colors.white),
-          ),
+        Row(
+          children: [
+            const Icon(Icons.draw_outlined, color: AppColors.secondaryBlue, size: 20),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text("Dessinez le croquis de l'accident", style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ],
         ),
-        TextButton.icon(
-          onPressed: () => _croquisController.clear(),
-          icon: const Icon(Icons.clear, size: 16),
-          label: const Text("Effacer"),
+        const SizedBox(height: 6),
+        Text(
+          "Utilisez les outils ci-dessous : stylo, lignes, flèches, véhicules A/B et texte.",
+          style: TextStyle(color: AppColors.mediumGrey, fontSize: 12),
         ),
+        const SizedBox(height: 12),
+        SmartCanvasWidget(controller: _croquisCanvasController, height: 350),
       ],
     );
   }
@@ -537,6 +536,16 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
   }
 
   // ─── SAVE ───
+  Future<File?> _exportCanvasImage() async {
+    if (_croquisCanvasController.isEmpty) return null;
+    final Uint8List? data = await _croquisCanvasController.toPngBytes();
+    if (data == null) return null;
+    final tempDir = await getTemporaryDirectory();
+    File file = await File('${tempDir.path}/croquis_${DateTime.now().millisecondsSinceEpoch}.png').create();
+    file.writeAsBytesSync(data);
+    return file;
+  }
+
   Future<File?> _exportSignature(SignatureController controller, String prefix) async {
     if (controller.isEmpty) return null;
     final Uint8List? data = await controller.toPngBytes();
@@ -615,7 +624,7 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
         
         if (accidentId.isNotEmpty) {
           // Exporter les signatures et croquis
-          File? croquisFile = await _exportSignature(_croquisController, "croquis");
+          File? croquisFile = await _exportCanvasImage();
           File? sigAFile = await _exportSignature(_signatureControllerA, "sigA");
           File? sigBFile = await _exportSignature(_signatureControllerB, "sigB");
 

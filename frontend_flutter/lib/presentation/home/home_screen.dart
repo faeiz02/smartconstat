@@ -6,7 +6,6 @@ import '../../data/services/accident_service.dart';
 import '../constat/screens/constat_form_screen.dart';
 import '../accident/screens/accident_result_screen.dart';
 import '../profile/profile_screen.dart';
-import '../services/teleconsultation_screen.dart';
 import '../services/assistance_voyage_screen.dart';
 import '../services/reseau_soins_screen.dart';
 import '../services/assistance_247_screen.dart';
@@ -648,7 +647,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildServicesScreen() {
     final List<Map<String, dynamic>> services = [
       {"icon": Icons.description_outlined, "title": "Constat", "color": AppColors.secondaryBlue, "screen": const ConstatFormScreen()},
-      {"icon": Icons.video_call_outlined, "title": "Téléconsultation", "color": AppColors.greenSuccess, "screen": const TeleconsultationScreen()},
       {"icon": Icons.flight_takeoff_rounded, "title": "Assist. Voyage", "color": AppColors.orangeWarning, "screen": const AssistanceVoyageScreen()},
       {"icon": Icons.local_hospital_outlined, "title": "Réseau soins", "color": AppColors.tealSoins, "screen": const ReseauSoinsScreen()},
       {"icon": Icons.support_agent_rounded, "title": "Assistance 24/7", "color": AppColors.purpleAssistance, "screen": const Assistance247Screen()},

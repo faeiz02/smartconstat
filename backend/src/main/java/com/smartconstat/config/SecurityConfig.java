@@ -34,6 +34,10 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers(
                     "/api/auth/**",
+                    "/api/avis/professional/**",
+                    "/api/services/healthcare",
+                    "/api/services/assistance-numbers",
+                    "/api/services/assistance-types",
                     "/h2-console/**",
                     "/error"
                 ).permitAll()
