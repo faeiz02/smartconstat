@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/user_model.dart';
 import '../../accident/screens/accident_declaration_screen.dart';
-import '../../data/models/user_model.dart';
-import '../accident/screens/accident_declaration_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final UserModel user;
