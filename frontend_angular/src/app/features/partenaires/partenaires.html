@@ -1,0 +1,132 @@
+<div class="page-header">
+  <div>
+    <h1>Réseau Soins & Garages</h1>
+    <p class="subtitle">{{ professionals.length }} partenaires enregistrés</p>
+  </div>
+  <div class="header-actions">
+    <button class="add-btn" (click)="openAddModal()">
+      <span class="material-icons">add_business</span> Ajouter
+    </button>
+    <button class="refresh-btn" (click)="loadData()">
+      <span class="material-icons" [class.spinning]="isLoading">refresh</span> Actualiser
+    </button>
+  </div>
+</div>
+
+<!-- Type Filters -->
+<div class="type-filters">
+  <button class="type-chip" [class.active]="activeTypeFilter === null" (click)="filterByType(null)">
+    <span class="material-icons">apps</span> Tous ({{ professionals.length }})
+  </button>
+  <button class="type-chip" *ngFor="let type of types" [class.active]="activeTypeFilter === type" (click)="filterByType(type)">
+    <span class="material-icons">{{ getTypeIcon(type) }}</span> {{ type }} ({{ countByType(type) }})
+  </button>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+  <span class="material-icons search-icon">search</span>
+  <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="Rechercher par nom, type, adresse..." />
+</div>
+
+<!-- Loading -->
+<div class="loading-state" *ngIf="isLoading"><div class="spinner"></div><p>Chargement...</p></div>
+
+<!-- Empty -->
+<div class="empty-state" *ngIf="!isLoading && filteredProfessionals.length === 0">
+  <span class="material-icons" style="font-size:48px;color:#ccc;">health_and_safety</span>
+  <p>Aucun partenaire trouvé.</p>
+  <button class="add-btn" (click)="openAddModal()"><span class="material-icons">add</span> Ajouter le premier</button>
+</div>
+
+<!-- Cards -->
+<div class="partners-grid" *ngIf="!isLoading && filteredProfessionals.length > 0">
+  <div class="partner-card" *ngFor="let pro of filteredProfessionals">
+    <div class="partner-header">
+      <div class="partner-icon"><span class="material-icons">{{ getTypeIcon(pro.type) }}</span></div>
+      <div class="partner-title">
+        <h3>{{ pro.name || 'N/A' }}</h3>
+        <span class="partner-type">{{ pro.type || 'Autre' }}</span>
+      </div>
+      <div class="card-actions">
+        <button class="icon-btn edit-btn" (click)="openEditModal(pro)" title="Modifier"><span class="material-icons">edit</span></button>
+        <button class="icon-btn delete-btn" (click)="openDeleteModal(pro)" title="Supprimer"><span class="material-icons">delete</span></button>
+      </div>
+    </div>
+    <div class="partner-body">
+      <div class="partner-row"><span class="material-icons">location_on</span><span>{{ pro.address || 'N/A' }}</span></div>
+      <div class="partner-row" *ngIf="pro.distanceStr"><span class="material-icons">near_me</span><span>{{ pro.distanceStr }}</span></div>
+      <div class="partner-row"><span class="material-icons">phone</span><span>{{ pro.phone || 'N/A' }}</span></div>
+    </div>
+    <div class="partner-footer">
+      <div class="rating">
+        <span class="material-icons star" *ngFor="let s of getStars(pro.rating)" [class.filled]="s === 1">{{ s === 1 ? 'star' : 'star_border' }}</span>
+        <span class="rating-value">{{ pro.rating || 0 }}</span>
+        <span class="review-count">({{ pro.reviewCount || 0 }} avis)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><span class="material-icons">{{ isEditing ? 'edit' : 'add_business' }}</span> {{ isEditing ? 'Modifier' : 'Ajouter' }} un partenaire</h2>
+      <button class="close-btn" (click)="closeModal()"><span class="material-icons">close</span></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Nom *</label><input type="text" [(ngModel)]="editItem.name" placeholder="Nom du partenaire" /></div>
+        <div class="form-group"><label>Type *</label>
+          <select [(ngModel)]="editItem.type" class="role-select">
+            <option value="Clinique">Clinique</option><option value="Généraliste">Généraliste</option>
+            <option value="Dentiste">Dentiste</option><option value="Garage">Garage</option><option value="Autre">Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Adresse</label><input type="text" [(ngModel)]="editItem.address" placeholder="Adresse complète" /></div>
+      <div class="form-row">
+        <div class="form-group"><label>Téléphone</label><input type="text" [(ngModel)]="editItem.phone" placeholder="Numéro" /></div>
+        <div class="form-group"><label>Distance</label><input type="text" [(ngModel)]="editItem.distanceStr" placeholder="Ex: 1.2 km" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Note</label><input type="number" [(ngModel)]="editItem.rating" min="0" max="5" step="0.1" /></div>
+        <div class="form-group"><label>Nombre d'avis</label><input type="number" [(ngModel)]="editItem.reviewCount" min="0" /></div>
+      </div>
+      <div class="form-group"><label>Bio</label><textarea [(ngModel)]="editItem.bio" rows="3" placeholder="Description..."></textarea></div>
+      <div class="modal-message success" *ngIf="modalMessage && modalMessageType === 'success'"><span class="material-icons">check_circle</span> {{ modalMessage }}</div>
+      <div class="modal-message error" *ngIf="modalMessage && modalMessageType === 'error'"><span class="material-icons">error</span> {{ modalMessage }}</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModal()">Annuler</button>
+      <button class="btn-confirm" (click)="saveItem()" [disabled]="isSaving">
+        <span class="material-icons" *ngIf="!isSaving">save</span>
+        <div class="spinner small" *ngIf="isSaving"></div>
+        {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header danger"><h2>Supprimer le partenaire</h2>
+      <button class="close-btn" (click)="closeDeleteModal()"><span class="material-icons">close</span></button>
+    </div>
+    <div class="modal-body" *ngIf="itemToDelete">
+      <div class="delete-warning">
+        <span class="material-icons">warning</span>
+        <p>Supprimer <strong>{{ itemToDelete.name }}</strong> ? Cette action est irréversible.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeDeleteModal()">Annuler</button>
+      <button class="btn-delete" (click)="confirmDelete()" [disabled]="isDeleting">
+        <span class="material-icons" *ngIf="!isDeleting">delete_forever</span>
+        {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
+      </button>
+    </div>
+  </div>
+</div>

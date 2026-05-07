@@ -1,0 +1,105 @@
+<div class="page-header">
+      <div>
+        <h1>Gestion des Clients</h1>
+        <p class="subtitle">{{ clients.length }} utilisateurs enregistrés</p>
+      </div>
+      <button class="refresh-btn" (click)="loadClients()">
+        <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+        Actualiser
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon total"><span class="material-icons">people</span></div>
+        <div class="stat-info">
+          <div class="stat-value">{{ clients.length }}</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon clients"><span class="material-icons">person</span></div>
+        <div class="stat-info">
+          <div class="stat-value">{{ countByRole('client') }}</div>
+          <div class="stat-label">Clients</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon admins"><span class="material-icons">admin_panel_settings</span></div>
+        <div class="stat-info">
+          <div class="stat-value">{{ countByRole('admin') }}</div>
+          <div class="stat-label">Admins</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()"
+        placeholder="Rechercher par nom, email, CIN, téléphone..." />
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Chargement des clients...</p>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="!isLoading && filteredClients.length === 0">
+      <span class="material-icons">person_search</span>
+      <p>Aucun client trouvé.</p>
+    </div>
+
+    <!-- Client Table -->
+    <div class="table-container" *ngIf="!isLoading && filteredClients.length > 0">
+      <table class="clients-table">
+        <thead>
+          <tr>
+            <th>Utilisateur</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+            <th>CIN</th>
+            <th>Véhicule</th>
+            <th>Rôle</th>
+            <th>Statut</th>
+            <th>Inscription</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let client of filteredClients">
+            <td>
+              <div class="user-cell">
+                <div class="avatar">{{ getInitials(client) }}</div>
+                <div>
+                  <div class="name">{{ client.nom }} {{ client.prenom }}</div>
+                  <div class="assurance-id">{{ client.assuranceId || '—' }}</div>
+                </div>
+              </div>
+            </td>
+            <td>{{ client.email || '—' }}</td>
+            <td>{{ client.phone || '—' }}</td>
+            <td class="cin-cell">{{ client.cin || '—' }}</td>
+            <td>
+              <span *ngIf="client.vehicleBrand">{{ client.vehicleBrand }} {{ client.vehicleModel }}</span>
+              <span *ngIf="!client.vehicleBrand" class="na">—</span>
+              <div class="plate" *ngIf="client.vehiclePlate">{{ client.vehiclePlate }}</div>
+            </td>
+            <td>
+              <span class="role-badge" [ngClass]="client.role === 'admin' ? 'role-admin' : 'role-client'">
+                {{ client.role || 'client' }}
+              </span>
+            </td>
+            <td>
+              <span class="verified-badge" [ngClass]="client.isVerified ? 'verified' : 'unverified'">
+                <span class="material-icons">{{ client.isVerified ? 'check_circle' : 'pending' }}</span>
+                {{ client.isVerified ? 'Vérifié' : 'En attente' }}
+              </span>
+            </td>
+            <td class="date-cell">{{ formatDate(client.createdAt) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>

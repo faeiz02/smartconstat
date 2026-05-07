@@ -14,10 +14,14 @@ class ApiServiceFeatures {
   }
 
   // ─── Factures ───
-  static Future<List<dynamic>> getFactures() async {
+  static Future<List<dynamic>> getFactures({String? type}) async {
     try {
+      String url = ApiConstants.servicesFactures;
+      if (type != null && type.isNotEmpty) {
+        url += '?type=$type';
+      }
       final response = await http.get(
-        Uri.parse(ApiConstants.servicesFactures),
+        Uri.parse(url),
         headers: await _headers(),
       );
       if (response.statusCode == 200) {
@@ -27,6 +31,105 @@ class ApiServiceFeatures {
     } catch (e) {
       print("Erreur getFactures: $e");
       return [];
+    }
+  }
+
+  // ─── Delete Facture ───
+  static Future<bool> deleteFacture(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConstants.servicesFactures}/$id'),
+        headers: await _headers(),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Erreur deleteFacture: $e");
+      return false;
+    }
+  }
+
+  // ─── Create Facture ───
+  static Future<int> createFacture({
+    required String mois,
+    required double montant,
+    required String echeance,
+    required String typeFacture,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConstants.servicesFactures),
+        headers: await _headers(),
+        body: jsonEncode({
+          "mois": mois,
+          "montant": montant,
+          "echeance": echeance,
+          "typeFacture": typeFacture,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['id'] as int;
+      }
+      return -1;
+    } catch (e) {
+      print("Erreur createFacture: $e");
+      return -1;
+    }
+  }
+
+  // ─── Upload Facture Photo ───
+  static Future<bool> uploadFacturePhoto(int factureId, String filePath) async {
+    try {
+      final token = await SecureStorageService.getToken();
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.servicesFactures}/$factureId/upload'),
+      );
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      request.files.add(await http.MultipartFile.fromPath('photo', filePath));
+      var response = await request.send();
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Erreur uploadFacturePhoto: $e");
+      return false;
+    }
+  }
+
+  // ─── Dashboard: All Constats ───
+  static Future<List<dynamic>> getAllConstats({String? statut}) async {
+    try {
+      String url = ApiConstants.constatsAll;
+      if (statut != null && statut.isNotEmpty) {
+        url += '?statut=$statut';
+      }
+      final response = await http.get(
+        Uri.parse(url),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+      return [];
+    } catch (e) {
+      print("Erreur getAllConstats: $e");
+      return [];
+    }
+  }
+
+  // ─── Dashboard: Update Constat Statut ───
+  static Future<bool> updateConstatStatut(int constatId, String statut) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConstants.constats}/$constatId/statut'),
+        headers: await _headers(),
+        body: jsonEncode({"statut": statut}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Erreur updateConstatStatut: $e");
+      return false;
     }
   }
 
@@ -81,20 +184,6 @@ class ApiServiceFeatures {
     }
   }
 
-  // ─── Demande de Devis ───
-  static Future<bool> requestDevis(String assuranceType) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.servicesDevis),
-        headers: await _headers(),
-        body: jsonEncode({"assuranceType": assuranceType}),
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      print("Erreur requestDevis: $e");
-      return false;
-    }
-  }
   // ─── Avis ───
   static Future<List<dynamic>> getAvis(int professionalId) async {
     try {

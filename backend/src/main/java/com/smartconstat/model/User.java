@@ -37,6 +37,9 @@ public class User {
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
+    private String role = "client"; // "client", "admin", "employe"
+
+    @Column(nullable = false)
     private boolean isVerified = false;
 
     @PrePersist

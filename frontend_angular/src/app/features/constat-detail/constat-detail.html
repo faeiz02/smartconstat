@@ -1,0 +1,222 @@
+<!-- Constat Detail Content -->
+    <button class="back-btn" routerLink="/dashboard">
+      <span class="material-icons">arrow_back</span>
+      Retour au Dashboard
+    </button>
+
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Chargement du constat...</p>
+    </div>
+
+    <div class="error-state" *ngIf="!isLoading && !constat">
+      <span class="material-icons">error_outline</span>
+      <h2>Constat introuvable</h2>
+      <p>Le constat que vous recherchez n'existe pas ou a été supprimé.</p>
+      <button class="back-link" routerLink="/dashboard">Retour au dashboard</button>
+    </div>
+
+    <div class="content" *ngIf="!isLoading && constat">
+      <!-- Header -->
+      <div class="title-section">
+        <div>
+          <h1>Constat #{{ constat.accidentId || constat.id || '?' }}</h1>
+          <p class="subtitle">{{ formatDate(constat.dateTime) }}</p>
+        </div>
+        <div class="status-chip" [ngClass]="getStatutClass(constat.statut)">
+          <span class="material-icons">{{ getStatutIcon(constat.statut) }}</span>
+          {{ constat.statut || 'Non examiné' }}
+        </div>
+      </div>
+
+      <!-- Assigné à -->
+      <div class="assigned-banner" *ngIf="constat.traiteParNom">
+        <span class="material-icons">person</span>
+        <span>Traité par : <strong>{{ constat.traiteParNom }}</strong></span>
+      </div>
+
+      <!-- Success Toast -->
+      <div class="success-toast" *ngIf="successMessage">
+        <span class="material-icons">check_circle</span>
+        {{ successMessage }}
+      </div>
+
+      <!-- Error Toast -->
+      <div class="error-toast" *ngIf="errorMessage">
+        <span class="material-icons">warning</span>
+        {{ errorMessage }}
+      </div>
+
+      <!-- Actions Panel -->
+      <div class="actions-panel">
+        <h3>Actions</h3>
+        <p class="actions-hint">Cliquez sur un bouton pour changer le statut. Une fois "Examiner" cliqué, ce constat vous sera assigné et ne sera plus visible par les autres employés.</p>
+        <div class="action-buttons">
+          <button 
+            class="btn-action btn-info" 
+            [class.active]="constat.statut === 'En cours d\'exécution'"
+            [disabled]="isUpdating"
+            (click)="updateStatut('En cours d\'exécution')">
+            <span class="material-icons">hourglass_top</span>
+            Examiner
+          </button>
+          <button 
+            class="btn-action btn-success" 
+            [class.active]="constat.statut === 'Traité'"
+            [disabled]="isUpdating"
+            (click)="updateStatut('Traité')">
+            <span class="material-icons">check_circle</span>
+            Traiter
+          </button>
+          <button 
+            class="btn-action btn-danger" 
+            [class.active]="constat.statut === 'Rejeté'"
+            [disabled]="isUpdating"
+            (click)="updateStatut('Rejeté')">
+            <span class="material-icons">cancel</span>
+            Rejeter
+          </button>
+          <div class="spinner small" *ngIf="isUpdating"></div>
+        </div>
+      </div>
+
+      <!-- Details Grid -->
+      <div class="details-grid">
+        <!-- Info Générales -->
+        <div class="section-card">
+          <div class="section-header">
+            <span class="material-icons">info</span>
+            <h2>Informations Générales</h2>
+          </div>
+          <div class="section-body">
+            <div class="info-item">
+              <span class="info-label">Lieu</span>
+              <span class="info-value">{{ constat.lieu || 'N/A' }}</span>
+            </div>
+            <div class="info-item" *ngIf="constat.userName">
+              <span class="info-label">Soumis par</span>
+              <span class="info-value">{{ constat.userName }}</span>
+            </div>
+            <div class="info-item" *ngIf="constat.userEmail">
+              <span class="info-label">Email</span>
+              <span class="info-value">{{ constat.userEmail }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Blessés</span>
+              <span class="info-value" [class.text-danger]="constat.blesses">{{ constat.blesses ? 'Oui' : 'Non' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Intervention Police</span>
+              <span class="info-value">{{ constat.interventionPolice ? 'Oui' : 'Non' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Véhicule A -->
+        <div class="section-card">
+          <div class="section-header vehicle-a">
+            <span class="material-icons">directions_car</span>
+            <h2>Véhicule A</h2>
+          </div>
+          <div class="section-body">
+            <div class="info-item">
+              <span class="info-label">Conducteur</span>
+              <span class="info-value">{{ constat.nomA }} {{ constat.prenomA }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Immatriculation</span>
+              <span class="info-value plate-value">{{ constat.immatriculationA || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Assureur</span>
+              <span class="info-value">{{ constat.assureurA || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">N° Contrat</span>
+              <span class="info-value">{{ constat.contratA || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Véhicule</span>
+              <span class="info-value">{{ constat.vehiculeMarqueA || '' }} {{ constat.vehiculeModeleA || '' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Adresse</span>
+              <span class="info-value">{{ constat.adresseA || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Dégâts apparents</span>
+              <span class="info-value">{{ constat.degatsApparentsA || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Véhicule B -->
+        <div class="section-card">
+          <div class="section-header vehicle-b">
+            <span class="material-icons">directions_car</span>
+            <h2>Véhicule B</h2>
+          </div>
+          <div class="section-body">
+            <div class="info-item">
+              <span class="info-label">Conducteur</span>
+              <span class="info-value">{{ constat.nomB }} {{ constat.prenomB }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Immatriculation</span>
+              <span class="info-value plate-value">{{ constat.immatriculationB || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Assureur</span>
+              <span class="info-value">{{ constat.assureurB || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">N° Contrat</span>
+              <span class="info-value">{{ constat.contratB || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Véhicule</span>
+              <span class="info-value">{{ constat.vehiculeMarqueB || '' }} {{ constat.vehiculeModeleB || '' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Adresse</span>
+              <span class="info-value">{{ constat.adresseB || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Dégâts apparents</span>
+              <span class="info-value">{{ constat.degatsApparentsB || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Circonstances -->
+        <div class="section-card">
+          <div class="section-header">
+            <span class="material-icons">notes</span>
+            <h2>Circonstances & Observations</h2>
+          </div>
+          <div class="section-body">
+            <div class="info-item" *ngIf="constat.circonstances && constat.circonstances.length > 0">
+              <span class="info-label">Circonstances</span>
+              <span class="info-value">{{ constat.circonstances.join(', ') }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Observations</span>
+              <span class="info-value">{{ constat.observations || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Témoins</span>
+              <span class="info-value">{{ constat.temoins || 'Aucun' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Point de choc initial</span>
+              <span class="info-value">{{ constat.pointChocInitial || 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Autres dégâts</span>
+              <span class="info-value">{{ constat.autresDegats || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+

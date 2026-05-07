@@ -1,0 +1,89 @@
+<div class="page-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <span class="material-icons">shield</span>
+      </div>
+      <span class="brand-name">Smart<strong>Constat</strong></span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">PRINCIPAL</div>
+      
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">dashboard</span>
+        <span>Tableau de bord</span>
+        <span class="badge warning" *ngIf="pendingConstats > 0">{{ pendingConstats }}</span>
+      </a>
+
+      <!-- Admin-only sections -->
+      <ng-container *ngIf="isAdmin()">
+        <div class="nav-section">UTILISATEURS</div>
+
+        <a routerLink="/clients" routerLinkActive="active" class="nav-item">
+          <span class="material-icons">people</span>
+          <span>Clients & Contrats</span>
+          <span class="badge info" *ngIf="totalClients > 0">{{ totalClients }}</span>
+        </a>
+        <a routerLink="/employes" routerLinkActive="active" class="nav-item">
+          <span class="material-icons">badge</span>
+          <span>Employés</span>
+          <span class="badge default" *ngIf="totalEmployees > 0">{{ totalEmployees }}</span>
+        </a>
+
+        <div class="nav-section">SERVICES APP CLIENT</div>
+
+        <a routerLink="/assistance" routerLinkActive="active" class="nav-item">
+          <span class="material-icons">support_agent</span>
+          <span>Services d'Assistance</span>
+        </a>
+        <a routerLink="/factures" routerLinkActive="active" class="nav-item">
+          <span class="material-icons">receipt_long</span>
+          <span>Factures & Devis</span>
+        </a>
+        <a routerLink="/partenaires" routerLinkActive="active" class="nav-item">
+          <span class="material-icons">handshake</span>
+          <span>Réseau Soins & Garages</span>
+        </a>
+      </ng-container>
+
+      <!-- Employe section -->
+      <ng-container *ngIf="!isAdmin()">
+        <div class="nav-section">MES DOSSIERS</div>
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [routerLinkActiveOptions]="{exact: true}">
+          <span class="material-icons">folder_open</span>
+          <span>Constats à traiter</span>
+          <span class="badge warning" *ngIf="pendingConstats > 0">{{ pendingConstats }}</span>
+        </a>
+      </ng-container>
+      
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">{{ getInitials() }}</div>
+        <div class="user-details">
+          <span class="user-name">{{ userName }}</span>
+          <span class="user-role" [class.admin-role]="isAdmin()">
+            <span class="material-icons role-icon">{{ isAdmin() ? 'admin_panel_settings' : 'work' }}</span>
+            {{ getRoleLabel() }}
+          </span>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="theme-btn" (click)="themeService.toggleTheme()" [title]="themeService.isDark() ? 'Mode clair' : 'Mode sombre'">
+          <span class="material-icons">{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+        </button>
+        <button class="logout-btn" (click)="logout()" title="Déconnexion">
+          <span class="material-icons">logout</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

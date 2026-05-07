@@ -44,6 +44,44 @@ public class ConstatController {
         return ResponseEntity.ok(constats);
     }
 
+    /** Dashboard: Get all constats, optionally filtered by statut */
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllConstats(
+            @AuthenticationPrincipal User user,
+            @RequestParam(required = false) String statut) {
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
+        }
+        // Les employés ne voient que les constats "Non examiné" + ceux qu'ils traitent
+        if ("employe".equals(user.getRole())) {
+            List<Map<String, Object>> constats = constatService.getConstatsForEmploye(user);
+            return ResponseEntity.ok(constats);
+        }
+        // Admin voit tout
+        List<Map<String, Object>> constats = constatService.getAllConstats(statut);
+        return ResponseEntity.ok(constats);
+    }
+
+    /** Dashboard: Update statut of a constat */
+    @PutMapping("/{id}/statut")
+    public ResponseEntity<?> updateStatut(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
+        }
+        String newStatut = body.get("statut");
+        if (newStatut == null || newStatut.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Statut requis"));
+        }
+        boolean updated = constatService.updateConstatStatut(id, newStatut, user);
+        if (updated) {
+            return ResponseEntity.ok(Map.of("success", true, "message", "Statut mis à jour"));
+        }
+        return ResponseEntity.status(409).body(Map.of("error", "Ce constat est déjà en cours de traitement par un autre employé"));
+    }
+
     @PostMapping("/{id}/uploads")
     public ResponseEntity<?> uploadConstatFiles(
             @PathVariable Long id,

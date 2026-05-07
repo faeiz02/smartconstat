@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/models/user_model.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/user_provider.dart';
 import 'package:go_router/go_router.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -38,6 +39,18 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     ).animate(
         CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
     _animController.forward();
+
+    // Tenter la restauration automatique de session
+    _tryAutoLogin();
+  }
+
+  Future<void> _tryAutoLogin() async {
+    final userProvider = context.read<UserProvider>();
+    final success = await userProvider.tryAutoLogin();
+    if (success && mounted && userProvider.user != null) {
+      context.read<AuthProvider>().setAuthenticatedUser(userProvider.user!);
+      context.go('/home', extra: userProvider.user!);
+    }
   }
 
   @override
@@ -73,6 +86,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         if (response.containsKey('user')) {
           final user = UserModel.fromJson(response['user']);
           context.read<AuthProvider>().setAuthenticatedUser(user);
+          context.read<UserProvider>().setUser(user);
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) context.go('/home', extra: user);
           });

@@ -43,6 +43,11 @@ class ConstatModel {
   final bool? degatsMaterielsAutres;
   final bool? interventionPolice;
 
+  // Statut et info utilisateur (dashboard)
+  final String? statut;
+  final String? userName;
+  final String? userEmail;
+
   ConstatModel({
     this.accidentId,
     this.dateTime,
@@ -77,6 +82,9 @@ class ConstatModel {
     this.blesses,
     this.degatsMaterielsAutres,
     this.interventionPolice,
+    this.statut,
+    this.userName,
+    this.userEmail,
   });
 
   factory ConstatModel.fromJson(Map<String, dynamic> json) {
@@ -114,6 +122,9 @@ class ConstatModel {
       blesses: json['blesses'],
       degatsMaterielsAutres: json['degatsMaterielsAutres'],
       interventionPolice: json['interventionPolice'],
+      statut: json['statut'],
+      userName: json['userName'],
+      userEmail: json['userEmail'],
     );
   }
 
@@ -152,6 +163,9 @@ class ConstatModel {
       'blesses': blesses,
       'degatsMaterielsAutres': degatsMaterielsAutres,
       'interventionPolice': interventionPolice,
+      'statut': statut,
+      'userName': userName,
+      'userEmail': userEmail,
     };
   }
 }

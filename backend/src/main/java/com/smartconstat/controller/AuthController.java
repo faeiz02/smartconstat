@@ -152,4 +152,9 @@ public class AuthController {
             + "</div></body></html>";
         return ResponseEntity.ok().header("Content-Type", "text/html").body(html);
     }
+
+    @GetMapping("/setup-admin")
+    public ResponseEntity<?> setupAdmin() {
+        return ResponseEntity.ok(authService.setupAdminAccount());
+    }
 }

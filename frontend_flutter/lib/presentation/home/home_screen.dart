@@ -5,12 +5,12 @@ import '../../data/models/accident_model.dart'; // Conservé pour compatibilité
 import '../../data/services/accident_service.dart';
 import '../constat/screens/constat_form_screen.dart';
 import '../accident/screens/accident_result_screen.dart';
+import '../constat/screens/my_constats_screen.dart';
 import '../profile/profile_screen.dart';
 import '../services/assistance_voyage_screen.dart';
 import '../services/reseau_soins_screen.dart';
 import '../services/assistance_247_screen.dart';
 import '../services/factures_screen.dart';
-import '../services/devis_screen.dart';
 import '../insurance/add_insurance_screen.dart';
 import '../../utils/date_formatter.dart';
 import '../../core/constants/app_colors.dart';
@@ -232,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
           _buildInsuranceCard(),
           const SizedBox(height: 16),
-          _buildRecentAccidentCard(),
+          _buildConstatsList(),
           const SizedBox(height: 20),
           _buildQuickActions(),
         ],
@@ -390,85 +390,137 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecentAccidentCard() {
+  Widget _buildConstatsList() {
     if (_isLoadingConstats) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_constats.isEmpty) {
-      return const SizedBox.shrink(); // Ne rien afficher si pas d'accident
-    }
-
-    final ConstatModel lastConstat = _constats.first;
-
-    // Convert ConstatModel to AccidentModel for the result screen
-    final AccidentModel adapterModel = AccidentModel(
-      id: lastConstat.accidentId ?? "N/A",
-      date: lastConstat.dateTime ?? DateTime.now(),
-      lieu: lastConstat.lieu ?? "Inconnu",
-      status: "Soumis", // Placeholder puisque l'API ne renvoie pas encore le statut réel
-      responsabilite: "En analyse",
-      immatriculation: lastConstat.immatriculationA ?? "N/A",
-    );
-
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AccidentResultScreen(accident: adapterModel))),
-      child: Container(
-        padding: const EdgeInsets.all(16),
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.orangeWarning.withOpacity(0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.orangeWarning.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          border: Border.all(color: AppColors.lightGrey),
         ),
-        child: Row(
+        child: const Text("Aucun constat soumis pour le moment.", textAlign: TextAlign.center, style: TextStyle(color: AppColors.mediumGrey)),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.orangeWarning.withOpacity(0.15), AppColors.orangeWarning.withOpacity(0.06)],
+            const Text("Dernier constat", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+            if (_constats.length > 1)
+              TextButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MyConstatsScreen(user: widget.user))),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                borderRadius: BorderRadius.circular(14),
+                child: const Text("Voir tout", style: TextStyle(color: AppColors.secondaryBlue, fontSize: 13, fontWeight: FontWeight.w600)),
               ),
-              child: const Icon(Icons.car_crash_outlined, color: AppColors.orangeWarning, size: 26),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Dernier constat soumis", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
-                  const SizedBox(height: 3),
-                  Text(
-                    lastConstat.dateTime != null ? DateFormatter.formatDate(lastConstat.dateTime!) : "Date inconnue",
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    lastConstat.lieu ?? "Lieu non spécifié",
-                    style: TextStyle(color: AppColors.mediumGrey, fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.scaffold,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.mediumGrey),
-            ),
           ],
         ),
-      ),
+        const SizedBox(height: 12),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _constats.take(1).length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final constat = _constats[index];
+            final status = constat.statut ?? "En cours d'analyse";
+            
+            Color statusColor;
+            Color statusBg;
+            if (status.toLowerCase().contains("traité") || status.toLowerCase().contains("validé")) {
+              statusColor = AppColors.greenSuccess;
+              statusBg = AppColors.greenSuccess.withOpacity(0.1);
+            } else if (status.toLowerCase().contains("refusé")) {
+              statusColor = AppColors.redDanger;
+              statusBg = AppColors.redDanger.withOpacity(0.1);
+            } else {
+              statusColor = AppColors.orangeWarning;
+              statusBg = AppColors.orangeWarning.withOpacity(0.1);
+            }
+
+            final AccidentModel adapterModel = AccidentModel(
+              id: constat.accidentId ?? "N/A",
+              date: constat.dateTime ?? DateTime.now(),
+              lieu: constat.lieu ?? "Inconnu",
+              status: status,
+              responsabilite: "En analyse",
+              immatriculation: constat.immatriculationA ?? "N/A",
+            );
+
+            return GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AccidentResultScreen(accident: adapterModel))),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.lightGrey.withOpacity(0.5)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: statusBg,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(Icons.description_outlined, color: statusColor, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                constat.dateTime != null ? DateFormatter.formatDate(constat.dateTime!) : "Date inconnue",
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(8)),
+                                child: Text(status, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w700)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            constat.lieu ?? "Lieu non spécifié",
+                            style: TextStyle(color: AppColors.mediumGrey, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Tiers: ${constat.immatriculationB ?? 'N/A'}",
+                            style: TextStyle(color: AppColors.darkGrey, fontSize: 11, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -646,12 +698,12 @@ class _HomeScreenState extends State<HomeScreen> {
   // ==================== SERVICES ====================
   Widget _buildServicesScreen() {
     final List<Map<String, dynamic>> services = [
+      {"icon": Icons.history_rounded, "title": "Mes Constats", "color": AppColors.primaryBlue, "screen": MyConstatsScreen(user: widget.user)},
       {"icon": Icons.description_outlined, "title": "Constat", "color": AppColors.secondaryBlue, "screen": const ConstatFormScreen()},
       {"icon": Icons.flight_takeoff_rounded, "title": "Assist. Voyage", "color": AppColors.orangeWarning, "screen": const AssistanceVoyageScreen()},
       {"icon": Icons.local_hospital_outlined, "title": "Réseau soins", "color": AppColors.tealSoins, "screen": const ReseauSoinsScreen()},
       {"icon": Icons.support_agent_rounded, "title": "Assistance 24/7", "color": AppColors.purpleAssistance, "screen": const Assistance247Screen()},
       {"icon": Icons.receipt_long_outlined, "title": "Mes factures", "color": AppColors.brownFactures, "screen": const FacturesScreen()},
-      {"icon": Icons.request_quote_outlined, "title": "Devis", "color": AppColors.pinkDevis, "screen": const DevisScreen()},
     ];
 
     return SingleChildScrollView(

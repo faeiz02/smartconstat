@@ -1,0 +1,126 @@
+<div class="page-header">
+  <div>
+    <h1>Services d'Assistance</h1>
+    <p class="subtitle">{{ emergencyNumbers.length }} numéros d'urgence — {{ assistanceTypes.length }} types d'assistance</p>
+  </div>
+  <div class="header-actions">
+    <button class="add-btn" (click)="activeTab === 'numbers' ? openAddNumber() : openAddType()">
+      <span class="material-icons">add</span> Ajouter
+    </button>
+    <button class="refresh-btn" (click)="loadData()">
+      <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+    </button>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab" [class.active]="activeTab === 'numbers'" (click)="activeTab = 'numbers'">
+    <span class="material-icons">phone_in_talk</span> Numéros d'urgence ({{ emergencyNumbers.length }})
+  </button>
+  <button class="tab" [class.active]="activeTab === 'types'" (click)="activeTab = 'types'">
+    <span class="material-icons">support_agent</span> Types d'assistance ({{ assistanceTypes.length }})
+  </button>
+</div>
+
+<!-- Loading -->
+<div class="loading-state" *ngIf="isLoading"><div class="spinner"></div><p>Chargement...</p></div>
+
+<!-- EMERGENCY NUMBERS -->
+<div *ngIf="!isLoading && activeTab === 'numbers'">
+  <div class="empty-state" *ngIf="emergencyNumbers.length === 0">
+    <span class="material-icons" style="font-size:48px;color:#ccc;">phone_disabled</span>
+    <p>Aucun numéro d'urgence.</p>
+    <button class="add-btn" (click)="openAddNumber()"><span class="material-icons">add</span> Ajouter</button>
+  </div>
+  <div class="items-grid" *ngIf="emergencyNumbers.length > 0">
+    <div class="item-card" *ngFor="let en of emergencyNumbers">
+      <div class="item-icon emergency"><span class="material-icons">{{ getIconName(en.iconStr) }}</span></div>
+      <div class="item-content">
+        <h3>{{ en.label || 'N/A' }}</h3>
+        <p class="item-value">{{ en.number || 'N/A' }}</p>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn edit-btn" (click)="openEditNumber(en)" title="Modifier"><span class="material-icons">edit</span></button>
+        <button class="icon-btn delete-btn" (click)="openDeleteNumber(en)" title="Supprimer"><span class="material-icons">delete</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ASSISTANCE TYPES -->
+<div *ngIf="!isLoading && activeTab === 'types'">
+  <div class="empty-state" *ngIf="assistanceTypes.length === 0">
+    <span class="material-icons" style="font-size:48px;color:#ccc;">support_agent</span>
+    <p>Aucun type d'assistance.</p>
+    <button class="add-btn" (click)="openAddType()"><span class="material-icons">add</span> Ajouter</button>
+  </div>
+  <div class="items-grid" *ngIf="assistanceTypes.length > 0">
+    <div class="item-card" *ngFor="let at of assistanceTypes">
+      <div class="item-icon assistance"><span class="material-icons">{{ getIconName(at.iconStr) }}</span></div>
+      <div class="item-content">
+        <h3>{{ at.title || 'N/A' }}</h3>
+        <p class="item-desc">{{ at.description || '' }}</p>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn edit-btn" (click)="openEditType(at)" title="Modifier"><span class="material-icons">edit</span></button>
+        <button class="icon-btn delete-btn" (click)="openDeleteType(at)" title="Supprimer"><span class="material-icons">delete</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><span class="material-icons">{{ isEditing ? 'edit' : 'add' }}</span> {{ isEditing ? 'Modifier' : 'Ajouter' }} {{ editingEntity === 'number' ? 'un numéro' : 'un type' }}</h2>
+      <button class="close-btn" (click)="closeModal()"><span class="material-icons">close</span></button>
+    </div>
+    <div class="modal-body">
+      <!-- Number Fields -->
+      <div *ngIf="editingEntity === 'number'">
+        <div class="form-group"><label>Label *</label><input type="text" [(ngModel)]="editItem.label" placeholder="Ex: SAMU, Police..." /></div>
+        <div class="form-group"><label>Numéro *</label><input type="text" [(ngModel)]="editItem.number" placeholder="Ex: 197" /></div>
+        <div class="form-group"><label>Icône (Material Icon)</label><input type="text" [(ngModel)]="editItem.iconStr" placeholder="Ex: phone, local_hospital..." /></div>
+      </div>
+      <!-- Type Fields -->
+      <div *ngIf="editingEntity === 'type'">
+        <div class="form-group"><label>Titre *</label><input type="text" [(ngModel)]="editItem.title" placeholder="Ex: Remorquage" /></div>
+        <div class="form-group"><label>Description</label><textarea [(ngModel)]="editItem.description" rows="3" placeholder="Description du service..."></textarea></div>
+        <div class="form-group"><label>Icône (Material Icon)</label><input type="text" [(ngModel)]="editItem.iconStr" placeholder="Ex: car_repair, build..." /></div>
+      </div>
+      <div class="modal-message success" *ngIf="modalMessage && modalMessageType === 'success'"><span class="material-icons">check_circle</span> {{ modalMessage }}</div>
+      <div class="modal-message error" *ngIf="modalMessage && modalMessageType === 'error'"><span class="material-icons">error</span> {{ modalMessage }}</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModal()">Annuler</button>
+      <button class="btn-confirm" (click)="saveItem()" [disabled]="isSaving">
+        <span class="material-icons" *ngIf="!isSaving">save</span>
+        {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header danger"><h2>Confirmer la suppression</h2>
+      <button class="close-btn" (click)="closeDeleteModal()"><span class="material-icons">close</span></button>
+    </div>
+    <div class="modal-body" *ngIf="itemToDelete">
+      <div class="delete-warning">
+        <span class="material-icons">warning</span>
+        <p>Supprimer <strong>{{ itemToDelete.label || itemToDelete.title }}</strong> ? Cette action est irréversible.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeDeleteModal()">Annuler</button>
+      <button class="btn-delete" (click)="confirmDelete()" [disabled]="isDeleting">
+        <span class="material-icons" *ngIf="!isDeleting">delete_forever</span>
+        {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
+      </button>
+    </div>
+  </div>
+</div>

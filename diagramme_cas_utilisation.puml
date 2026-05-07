@@ -1,0 +1,195 @@
+@startuml SmartConstat_UseCase
+
+' ══════════════════════════════════════════════
+'  CONFIGURATION GLOBALE
+' ══════════════════════════════════════════════
+skinparam handwritten false
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+
+skinparam actor {
+  FontSize 13
+  FontStyle bold
+}
+
+skinparam usecase {
+  FontSize 11
+  BorderThickness 1.5
+}
+
+skinparam rectangle {
+  RoundCorner 20
+  FontSize 14
+  FontStyle bold
+  BorderThickness 2
+}
+
+title Diagramme de Cas d'Utilisation\n<size:16>SmartConstat - Application de Constat Amiable Numerique</size>
+
+' ══════════════════════════════════════════════
+'  ACTEURS (gauche et droite)
+' ══════════════════════════════════════════════
+actor "Client\n(Assure)" as CLIENT #DarkGreen
+actor "Administrateur" as ADMIN #DarkRed
+actor "Employe" as EMPLOYE #DarkOrange
+actor "Systeme" as SYSTEME #SlateGray
+
+' ══════════════════════════════════════════════
+'  1. AUTHENTIFICATION
+' ══════════════════════════════════════════════
+package "1. Authentification" as PKG_AUTH #E8F5E9 {
+  usecase "Verifier l'assurance\n(ID + CIN)" as UC_VERIF_ASS #DCEDC8
+  usecase "S'inscrire" as UC_INSCRIRE #DCEDC8
+  usecase "Verifier l'email\n(code PIN)" as UC_VERIF_EMAIL #DCEDC8
+  usecase "Se connecter" as UC_CONNECTER #DCEDC8
+  usecase "Demander reinitialisation\nmot de passe" as UC_FORGOT #DCEDC8
+  usecase "Reinitialiser\nle mot de passe" as UC_RESET #DCEDC8
+  usecase "Renvoyer le code\nde verification" as UC_RESEND #DCEDC8
+}
+
+' ══════════════════════════════════════════════
+'  2. GESTION DU PROFIL
+' ══════════════════════════════════════════════
+package "2. Gestion du Profil" as PKG_PROFIL #E3F2FD {
+  usecase "Consulter son profil" as UC_VOIR_PROFIL #BBDEFB
+  usecase "Modifier son profil" as UC_EDIT_PROFIL #BBDEFB
+}
+
+' ══════════════════════════════════════════════
+'  3. GESTION DES CONSTATS (Client)
+' ══════════════════════════════════════════════
+package "3. Gestion des Constats" as PKG_CONSTAT #FFF3E0 {
+  usecase "Remplir un constat\namiable" as UC_REMPLIR #FFE0B2
+  usecase "Joindre des fichiers\n(photos, croquis,\nsignatures)" as UC_UPLOAD #FFE0B2
+  usecase "Consulter l'historique\ndes constats" as UC_HISTO #FFE0B2
+}
+
+' ══════════════════════════════════════════════
+'  4. SERVICES D'ASSURANCE
+' ══════════════════════════════════════════════
+package "4. Services d'Assurance" as PKG_SERVICES #F3E5F5 {
+  usecase "Consulter ses factures" as UC_FACTURES #E1BEE7
+  usecase "Ajouter une facture" as UC_ADD_FACT #E1BEE7
+  usecase "Supprimer une facture" as UC_DEL_FACT #E1BEE7
+  usecase "Joindre photo\na une facture" as UC_PHOTO_FACT #E1BEE7
+  usecase "Consulter numeros\nd'urgence 24/7" as UC_URGENCE #E1BEE7
+  usecase "Consulter types\nd'assistance" as UC_ASSIST #E1BEE7
+  usecase "Consulter le reseau\nde soins" as UC_SOINS #E1BEE7
+  usecase "Donner un avis" as UC_ADD_AVIS #E1BEE7
+  usecase "Modifier un avis" as UC_EDIT_AVIS #E1BEE7
+  usecase "Supprimer un avis" as UC_DEL_AVIS #E1BEE7
+}
+
+' ══════════════════════════════════════════════
+'  5. TABLEAU DE BORD (Admin)
+' ══════════════════════════════════════════════
+package "5. Tableau de Bord (Administration)" as PKG_DASH #FFEBEE {
+  usecase "Consulter tous\nles constats" as UC_ALL_CONST #FFCDD2
+  usecase "Filtrer constats\npar statut" as UC_FILTRE #FFCDD2
+  usecase "Changer le statut\nd'un constat" as UC_STATUT #FFCDD2
+  usecase "Consulter la liste\ndes utilisateurs" as UC_USERS #FFCDD2
+  usecase "Gerer les employes" as UC_EMPLOYES #FFCDD2
+}
+
+' ══════════════════════════════════════════════
+'  6. TRAITEMENT DOSSIERS (Employe)
+' ══════════════════════════════════════════════
+package "6. Traitement des Dossiers (Employe)" as PKG_TRAIT #FFF8E1 {
+  usecase "Voir les constats\nnon examines" as UC_NON_EXAM #FFECB3
+  usecase "Prendre en charge\nun constat" as UC_PRENDRE #FFECB3
+  usecase "Traiter / Rejeter\nun constat" as UC_TRAITER #FFECB3
+}
+
+' ══════════════════════════════════════════════
+'  7. TRAITEMENTS AUTOMATIQUES (Systeme)
+' ══════════════════════════════════════════════
+package "7. Traitements Automatiques (Systeme)" as PKG_SYS #ECEFF1 {
+  usecase "Envoyer email\nde verification" as UC_MAIL_VERIF #CFD8DC
+  usecase "Envoyer email\nreinit. MDP" as UC_MAIL_RESET #CFD8DC
+  usecase "Generer token JWT" as UC_GEN_JWT #CFD8DC
+  usecase "Verifier token JWT" as UC_CHK_JWT #CFD8DC
+  usecase "Initialiser le\ncompte admin" as UC_INIT_ADMIN #CFD8DC
+}
+
+' ══════════════════════════════════════════════
+'  ASSOCIATIONS : CLIENT
+' ══════════════════════════════════════════════
+CLIENT -- UC_VERIF_ASS
+CLIENT -- UC_INSCRIRE
+CLIENT -- UC_VERIF_EMAIL
+CLIENT -- UC_CONNECTER
+CLIENT -- UC_FORGOT
+CLIENT -- UC_RESET
+CLIENT -- UC_RESEND
+
+CLIENT -- UC_VOIR_PROFIL
+CLIENT -- UC_EDIT_PROFIL
+
+CLIENT -- UC_REMPLIR
+CLIENT -- UC_UPLOAD
+CLIENT -- UC_HISTO
+
+CLIENT -- UC_FACTURES
+CLIENT -- UC_ADD_FACT
+CLIENT -- UC_DEL_FACT
+CLIENT -- UC_PHOTO_FACT
+CLIENT -- UC_URGENCE
+CLIENT -- UC_ASSIST
+CLIENT -- UC_SOINS
+CLIENT -- UC_ADD_AVIS
+CLIENT -- UC_EDIT_AVIS
+CLIENT -- UC_DEL_AVIS
+
+' ══════════════════════════════════════════════
+'  ASSOCIATIONS : ADMIN
+' ══════════════════════════════════════════════
+ADMIN -- UC_CONNECTER
+ADMIN -- UC_ALL_CONST
+ADMIN -- UC_FILTRE
+ADMIN -- UC_STATUT
+ADMIN -- UC_USERS
+ADMIN -- UC_EMPLOYES
+
+' ══════════════════════════════════════════════
+'  ASSOCIATIONS : EMPLOYE
+' ══════════════════════════════════════════════
+EMPLOYE -- UC_CONNECTER
+EMPLOYE -- UC_NON_EXAM
+EMPLOYE -- UC_PRENDRE
+EMPLOYE -- UC_TRAITER
+
+' ══════════════════════════════════════════════
+'  ASSOCIATIONS : SYSTEME
+' ══════════════════════════════════════════════
+SYSTEME -- UC_MAIL_VERIF
+SYSTEME -- UC_MAIL_RESET
+SYSTEME -- UC_GEN_JWT
+SYSTEME -- UC_CHK_JWT
+SYSTEME -- UC_INIT_ADMIN
+
+' ══════════════════════════════════════════════
+'  RELATIONS <<include>>
+' ══════════════════════════════════════════════
+UC_INSCRIRE ..> UC_VERIF_ASS : <<include>>
+UC_INSCRIRE ..> UC_MAIL_VERIF : <<include>>
+UC_VERIF_EMAIL ..> UC_GEN_JWT : <<include>>
+UC_CONNECTER ..> UC_GEN_JWT : <<include>>
+UC_CONNECTER ..> UC_CHK_JWT : <<include>>
+UC_FORGOT ..> UC_MAIL_RESET : <<include>>
+UC_RESET ..> UC_CHK_JWT : <<include>>
+UC_REMPLIR ..> UC_CHK_JWT : <<include>>
+UC_PRENDRE ..> UC_STATUT : <<include>>
+
+' ══════════════════════════════════════════════
+'  RELATIONS <<extend>>
+' ══════════════════════════════════════════════
+UC_UPLOAD ..> UC_REMPLIR : <<extend>>
+UC_RESEND ..> UC_INSCRIRE : <<extend>>
+UC_PHOTO_FACT ..> UC_ADD_FACT : <<extend>>
+UC_FILTRE ..> UC_ALL_CONST : <<extend>>
+UC_TRAITER ..> UC_PRENDRE : <<extend>>
+
+@enduml

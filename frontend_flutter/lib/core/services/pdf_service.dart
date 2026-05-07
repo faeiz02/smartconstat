@@ -132,7 +132,7 @@ class PdfService {
       child: pw.Column(
         children: [
           pw.Text('12. circonstances',
-              style: const pw.TextStyle(
+              style: pw.TextStyle(
                   fontSize: 8, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 5),
           ...List.generate(

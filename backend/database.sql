@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
     vehicle_model VARCHAR(255),
     vehicle_plate VARCHAR(255),
     assurance_id VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'client',
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -80,6 +81,7 @@ CREATE TABLE IF NOT EXISTS constats (
     signature_a_path VARCHAR(255),
     signature_b_path VARCHAR(255),
     photos_paths TEXT,
+    statut VARCHAR(255) DEFAULT 'Non examiné',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     CONSTRAINT fk_user_constat FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -104,6 +106,12 @@ INSERT INTO assurances (assurance_id, nom, prenom, cin, phone, vehicle_brand, ve
 ('ASS004', 'Petit', 'Sophie', 'GH901234', '0655667788', 'Volkswagen', 'Golf', '3456-GH-04', 'Groupama', '2026-12-31'),
 ('ASS005', 'Robert', 'Lucas', 'IJ567890', '0644556677', 'BMW', 'Serie 3', '7890-IJ-05', 'MMA', '2027-03-31');
 
+-- Compte admin par défaut (mot de passe: admin123 - bcrypt hash)
+-- IMPORTANT: Le mot de passe est hashé avec BCrypt. Pour le changer, générez un nouveau hash.
+INSERT INTO users (email, password_hash, nom, prenom, cin, phone, assurance_id, role, is_verified) VALUES
+('sarra@smartconstat.tn', '$2a$10$hSwMMa9lqT4k4kfX7IPASu/TkiWoSOQuwGPK636miW.wbaS.W1v.m', 'Ben Ali', 'Sarra', 'ADMIN001', '0600000000', 'ADMIN_SARRA', 'admin', TRUE)
+ON DUPLICATE KEY UPDATE role = 'admin';
+
 -- 5. Table Factures
 CREATE TABLE IF NOT EXISTS factures (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -112,8 +120,13 @@ CREATE TABLE IF NOT EXISTS factures (
     montant DOUBLE,
     echeance DATE,
     statut VARCHAR(255),
+    type_facture VARCHAR(255) DEFAULT 'Autre',
     CONSTRAINT fk_user_facture FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- Migration: ajouter les colonnes si tables existantes
+-- ALTER TABLE constats ADD COLUMN IF NOT EXISTS statut VARCHAR(255) DEFAULT 'Non examiné';
+-- ALTER TABLE factures ADD COLUMN IF NOT EXISTS type_facture VARCHAR(255) DEFAULT 'Autre';
 
 -- 6. Table DevisRequests
 CREATE TABLE IF NOT EXISTS devis_requests (

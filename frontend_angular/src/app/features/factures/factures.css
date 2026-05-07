@@ -1,0 +1,106 @@
+/* Factures-specific styles */
+.stats-4 {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+.success-bg { background: rgba(46, 213, 115, 0.15); color: #2ed573; }
+.warning-bg { background: rgba(255, 165, 0, 0.15); color: #ffa500; }
+.amount-bg { background: rgba(108, 99, 255, 0.15); color: #6c63ff; }
+.amount-value { font-size: 16px !important; }
+
+/* Type Filters */
+.type-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.type-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.type-chip .material-icons { font-size: 16px; }
+.type-chip:hover { border-color: var(--border-hover); color: #6c63ff; }
+.type-chip.active {
+  background: rgba(108, 99, 255, 0.15);
+  border-color: rgba(108, 99, 255, 0.4);
+  color: #6c63ff;
+  font-weight: 600;
+}
+
+.id-cell {
+  font-family: monospace;
+  font-weight: 600;
+  color: #6c63ff;
+}
+
+.client-info .name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.montant-cell {
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: 'Inter', monospace;
+}
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(108, 99, 255, 0.08);
+  color: var(--text-main);
+}
+.type-badge .material-icons { font-size: 16px; color: #6c63ff; }
+
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.status-badge.status-success { background: rgba(46,213,115,0.12); color: #2ed573; }
+.status-badge.status-warning { background: rgba(255,165,0,0.12); color: #ffa500; }
+.status-badge.status-default { background: rgba(108,99,255,0.12); color: #6c63ff; }
+
+/* Action Buttons */
+.icon-btn { width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.icon-btn .material-icons { font-size: 18px; }
+.delete-btn { background: rgba(244,67,54,0.1); color: #f44336; }
+.delete-btn:hover { background: rgba(244,67,54,0.25); }
+
+/* Modals */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 999; animation: fadeIn 0.2s ease; }
+.modal-card { background: var(--bg-card, white); border: 1px solid var(--border-color); border-radius: 20px; width: 500px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s; }
+.modal-header { padding: 24px 24px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+.modal-header h2 { font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0; }
+.modal-header.danger h2 { color: #f44336; }
+.close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-color); }
+.btn-cancel { padding: 10px 20px; background: var(--nav-hover); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-delete { padding: 10px 20px; background: linear-gradient(135deg, #f44336, #c62828); border: none; border-radius: 10px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.btn-delete:disabled { opacity: 0.6; cursor: not-allowed; }
+.delete-warning { display: flex; align-items: flex-start; gap: 14px; padding: 16px; background: rgba(244,67,54,0.06); border: 1px solid rgba(244,67,54,0.15); border-radius: 12px; }
+.delete-warning .material-icons { font-size: 28px; color: #f44336; flex-shrink: 0; }
+.delete-warning p { margin: 0; font-size: 14px; color: var(--text-main); line-height: 1.6; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

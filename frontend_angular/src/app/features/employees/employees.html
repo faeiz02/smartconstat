@@ -1,0 +1,248 @@
+<!-- Page Header -->
+<div class="page-header">
+  <div>
+    <h1>Gestion des Employés</h1>
+    <p class="subtitle">{{ employees.length }} employés et administrateurs</p>
+  </div>
+  <div class="header-actions">
+    <button class="add-btn" (click)="openAddModal()">
+      <span class="material-icons">person_add</span>
+      Ajouter un employé
+    </button>
+    <button class="refresh-btn" (click)="loadEmployees()">
+      <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+      Actualiser
+    </button>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card" [class.active]="activeRoleFilter === null" (click)="filterByRole(null)">
+    <div class="stat-icon total"><span class="material-icons">groups</span></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ employees.length }}</div>
+      <div class="stat-label">Total</div>
+    </div>
+  </div>
+  <div class="stat-card" [class.active]="activeRoleFilter === 'employe'" (click)="filterByRole('employe')">
+    <div class="stat-icon employes"><span class="material-icons">badge</span></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ countByRole('employe') }}</div>
+      <div class="stat-label">Employés</div>
+    </div>
+  </div>
+  <div class="stat-card" [class.active]="activeRoleFilter === 'admin'" (click)="filterByRole('admin')">
+    <div class="stat-icon admins"><span class="material-icons">admin_panel_settings</span></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ countByRole('admin') }}</div>
+      <div class="stat-label">Administrateurs</div>
+    </div>
+  </div>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+  <span class="material-icons search-icon">search</span>
+  <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="Rechercher par nom, email, CIN, téléphone..." />
+</div>
+
+<!-- Loading -->
+<div class="loading-state" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Chargement des employés...</p>
+</div>
+
+<!-- Empty -->
+<div class="empty-state" *ngIf="!isLoading && filteredEmployees.length === 0">
+  <span class="material-icons empty-icon">person_search</span>
+  <p>Aucun employé trouvé.</p>
+  <button class="add-btn-small" (click)="openAddModal()">
+    <span class="material-icons">person_add</span> Ajouter le premier employé
+  </button>
+</div>
+
+<!-- Table -->
+<div class="table-container" *ngIf="!isLoading && filteredEmployees.length > 0">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Utilisateur</th>
+        <th>Email</th>
+        <th>Téléphone</th>
+        <th>CIN</th>
+        <th>Rôle</th>
+        <th>Statut</th>
+        <th>Création</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let emp of filteredEmployees">
+        <td>
+          <div class="user-cell">
+            <div class="avatar" [ngClass]="emp.role === 'admin' ? 'avatar-admin' : 'avatar-employe'">{{ getInitials(emp) }}</div>
+            <div>
+              <div class="name">{{ emp.nom }} {{ emp.prenom }}</div>
+              <div class="secondary">{{ emp.assuranceId || '—' }}</div>
+            </div>
+          </div>
+        </td>
+        <td>{{ emp.email || '—' }}</td>
+        <td>{{ emp.phone || '—' }}</td>
+        <td class="mono">{{ emp.cin || '—' }}</td>
+        <td>
+          <span class="role-badge" [ngClass]="emp.role === 'admin' ? 'role-admin' : 'role-employe'">
+            <span class="material-icons">{{ emp.role === 'admin' ? 'admin_panel_settings' : 'badge' }}</span>
+            {{ emp.role || 'employe' }}
+          </span>
+        </td>
+        <td>
+          <span class="status-badge" [ngClass]="emp.isVerified ? 'verified' : 'unverified'">
+            <span class="material-icons">{{ emp.isVerified ? 'check_circle' : 'pending' }}</span>
+            {{ emp.isVerified ? 'Vérifié' : 'En attente' }}
+          </span>
+        </td>
+        <td class="date-cell">{{ formatDate(emp.createdAt) }}</td>
+        <td>
+          <div class="action-cell">
+            <button class="icon-btn edit-btn" (click)="openRoleModal(emp)" title="Changer le rôle">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="icon-btn delete-btn" (click)="openDeleteModal(emp)" title="Supprimer">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══ ADD EMPLOYEE MODAL ═══ -->
+<div class="modal-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><span class="material-icons">person_add</span> Ajouter un employé</h2>
+      <button class="close-btn" (click)="closeAddModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom *</label>
+          <input type="text" [(ngModel)]="newUser.nom" placeholder="Nom de famille" />
+        </div>
+        <div class="form-group">
+          <label>Prénom *</label>
+          <input type="text" [(ngModel)]="newUser.prenom" placeholder="Prénom" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" [(ngModel)]="newUser.email" placeholder="email@smartconstat.tn" />
+      </div>
+      <div class="form-group">
+        <label>Mot de passe *</label>
+        <input type="password" [(ngModel)]="newUser.password" placeholder="Mot de passe sécurisé" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CIN</label>
+          <input type="text" [(ngModel)]="newUser.cin" placeholder="Numéro CIN" />
+        </div>
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="text" [(ngModel)]="newUser.phone" placeholder="06 XX XX XX XX" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Rôle *</label>
+        <select [(ngModel)]="newUser.role" class="role-select">
+          <option value="employe">Employé</option>
+          <option value="admin">Administrateur</option>
+        </select>
+      </div>
+      <div class="modal-message success" *ngIf="addMessage && addMessageType === 'success'">
+        <span class="material-icons">check_circle</span> {{ addMessage }}
+      </div>
+      <div class="modal-message error" *ngIf="addMessage && addMessageType === 'error'">
+        <span class="material-icons">error</span> {{ addMessage }}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeAddModal()">Annuler</button>
+      <button class="btn-confirm" (click)="createUser()" [disabled]="isCreating">
+        <span class="material-icons" *ngIf="!isCreating">person_add</span>
+        <div class="spinner small" *ngIf="isCreating"></div>
+        {{ isCreating ? 'Création...' : 'Créer le compte' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ROLE MODAL ═══ -->
+<div class="modal-overlay" *ngIf="showRoleModal" (click)="closeRoleModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Changer le rôle</h2>
+      <button class="close-btn" (click)="closeRoleModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="selectedUser">
+      <p class="modal-user-info">
+        <span class="material-icons">person</span>
+        <strong>{{ selectedUser.nom }} {{ selectedUser.prenom }}</strong>
+        <span class="modal-email">({{ selectedUser.email }})</span>
+      </p>
+      <label class="select-label">Nouveau rôle :</label>
+      <select [(ngModel)]="selectedRole" class="role-select">
+        <option value="client">Client</option>
+        <option value="employe">Employé</option>
+        <option value="admin">Administrateur</option>
+      </select>
+      <div class="modal-message success" *ngIf="roleMessage && roleMessageType === 'success'">
+        <span class="material-icons">check_circle</span> {{ roleMessage }}
+      </div>
+      <div class="modal-message error" *ngIf="roleMessage && roleMessageType === 'error'">
+        <span class="material-icons">error</span> {{ roleMessage }}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeRoleModal()">Annuler</button>
+      <button class="btn-confirm" (click)="updateRole()" [disabled]="isUpdatingRole">
+        <span class="material-icons" *ngIf="!isUpdatingRole">save</span>
+        <div class="spinner small" *ngIf="isUpdatingRole"></div>
+        {{ isUpdatingRole ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DELETE MODAL ═══ -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-card delete-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header danger">
+      <h2>Supprimer l'utilisateur</h2>
+      <button class="close-btn" (click)="closeDeleteModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body" *ngIf="userToDelete">
+      <div class="delete-warning">
+        <span class="material-icons">warning</span>
+        <p>Êtes-vous sûr de vouloir supprimer <strong>{{ userToDelete.nom }} {{ userToDelete.prenom }}</strong> ?<br>Cette action est irréversible.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeDeleteModal()">Annuler</button>
+      <button class="btn-delete" (click)="confirmDelete()" [disabled]="isDeleting">
+        <span class="material-icons" *ngIf="!isDeleting">delete_forever</span>
+        <div class="spinner small" *ngIf="isDeleting"></div>
+        {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
+      </button>
+    </div>
+  </div>
+</div>

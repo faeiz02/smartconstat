@@ -27,6 +27,111 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
 
+    @jakarta.annotation.PostConstruct
+    public void initAccounts() {
+        // ─── Compte Admin ───
+        try {
+            Optional<User> opt = userRepository.findByEmail("sarra@smartconstat.tn");
+            User admin = opt.orElseGet(User::new);
+            
+            if (opt.isEmpty()) {
+                admin.setEmail("sarra@smartconstat.tn");
+                admin.setNom("Ben Ali");
+                admin.setPrenom("Sarra");
+                admin.setCin("ADMIN001");
+                admin.setPhone("0600000000");
+                admin.setAssuranceId("ADMIN_SARRA");
+            }
+            
+            admin.setPasswordHash(passwordEncoder.encode("admin123"));
+            admin.setRole("admin");
+            admin.setVerified(true);
+            userRepository.save(admin);
+            
+            System.out.println("==================================================");
+            System.out.println("✅ COMPTE ADMIN PRÊT !");
+            System.out.println("   Email: sarra@smartconstat.tn");
+            System.out.println("   Mdp:   admin123");
+            System.out.println("==================================================");
+        } catch (Exception e) {
+            System.err.println("Impossible de configurer le compte admin: " + e.getMessage());
+        }
+
+        // ─── Compte Employé ───
+        try {
+            Optional<User> optEmp = userRepository.findByEmail("employe@smartconstat.tn");
+            User employe = optEmp.orElseGet(User::new);
+
+            if (optEmp.isEmpty()) {
+                employe.setEmail("employe@smartconstat.tn");
+                employe.setNom("Trabelsi");
+                employe.setPrenom("Ahmed");
+                employe.setCin("EMP001");
+                employe.setPhone("0655001122");
+                employe.setAssuranceId("EMP_AHMED");
+            }
+
+            employe.setPasswordHash(passwordEncoder.encode("employe123"));
+            employe.setRole("employe");
+            employe.setVerified(true);
+            userRepository.save(employe);
+
+            System.out.println("==================================================");
+            System.out.println("✅ COMPTE EMPLOYÉ PRÊT !");
+            System.out.println("   Email: employe@smartconstat.tn");
+            System.out.println("   Mdp:   employe123");
+            System.out.println("==================================================");
+        } catch (Exception e) {
+            System.err.println("Impossible de configurer le compte employé: " + e.getMessage());
+        }
+    }
+
+    public Map<String, Object> setupAdminAccount() {
+        Map<String, Object> result = new LinkedHashMap<>();
+        try {
+            Optional<User> opt = userRepository.findByEmail("sarra@smartconstat.tn");
+            User admin;
+            
+            if (opt.isPresent()) {
+                admin = opt.get();
+                result.put("action", "UPDATE");
+            } else {
+                admin = new User();
+                admin.setEmail("sarra@smartconstat.tn");
+                admin.setNom("Ben Ali");
+                admin.setPrenom("Sarra");
+                admin.setCin("ADMIN001");
+                admin.setPhone("0600000000");
+                admin.setAssuranceId("ADMIN_SARRA");
+                result.put("action", "CREATE");
+            }
+            
+            String rawPassword = "admin123";
+            String encodedPassword = passwordEncoder.encode(rawPassword);
+            admin.setPasswordHash(encodedPassword);
+            admin.setRole("admin");
+            admin.setVerified(true);
+            userRepository.save(admin);
+            
+            // Vérification immédiate
+            boolean matchTest = passwordEncoder.matches(rawPassword, encodedPassword);
+            
+            result.put("success", true);
+            result.put("email", "sarra@smartconstat.tn");
+            result.put("password", rawPassword);
+            result.put("hash_preview", encodedPassword.substring(0, 20) + "...");
+            result.put("password_match_test", matchTest);
+            result.put("role", admin.getRole());
+            result.put("verified", admin.isVerified());
+            result.put("user_id", admin.getId());
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("error", e.getMessage());
+            result.put("error_class", e.getClass().getName());
+        }
+        return result;
+    }
+
     // ─── Vérification assurance ───
     public Map<String, Object> verifyInsurance(String assuranceId, String cin) {
         Optional<Assurance> opt = assuranceRepository.findByAssuranceId(assuranceId);
@@ -207,6 +312,7 @@ public class AuthService {
                     .vehicleModel(req.getVehicleModel())
                     .vehiclePlate(req.getVehiclePlate())
                     .assuranceId(req.getAssuranceId())
+                    .role("client")
                     .isVerified(true)
                     .build();
 
@@ -336,6 +442,7 @@ public class AuthService {
         map.put("vehicle_model", user.getVehicleModel() != null ? user.getVehicleModel() : "");
         map.put("vehicle_plate", user.getVehiclePlate() != null ? user.getVehiclePlate() : "");
         map.put("insurance_number", user.getAssuranceId());
+        map.put("role", user.getRole() != null ? user.getRole() : "client");
 
         if (user.getAssuranceId() != null) {
             assuranceRepository.findByAssuranceId(user.getAssuranceId()).ifPresent(assurance -> {

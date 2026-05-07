@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface FactureRepository extends JpaRepository<Facture, Long> {
     List<Facture> findByUserOrderByEcheanceDesc(User user);
+    List<Facture> findByUserAndTypeFactureOrderByEcheanceDesc(User user, String typeFacture);
 }

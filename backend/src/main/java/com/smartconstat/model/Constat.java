@@ -20,6 +20,10 @@ public class Constat {
     private String lieu;
     private LocalDateTime dateTime;
 
+    // Statut du constat (Non examiné, En cours d'exécution, Traité, Rejeté)
+    @Builder.Default
+    private String statut = "Non examiné";
+
     // Véhicule A
     private String assureurA;
     private String contratA;
@@ -74,11 +78,19 @@ public class Constat {
     @Column(length = 2000)
     private String photosPaths;
 
+    // Employé qui traite ce constat
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "traite_par_id")
+    private User traitePar;
+
+    private String traiteParNom;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (statut == null) statut = "Non examiné";
     }
 }

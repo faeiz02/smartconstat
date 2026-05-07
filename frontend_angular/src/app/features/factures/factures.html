@@ -1,0 +1,142 @@
+<div class="page-header">
+  <div>
+    <h1>Factures & Devis</h1>
+    <p class="subtitle">{{ factures.length }} factures au total — {{ formatMontant(getTotalMontant()) }}</p>
+  </div>
+  <button class="refresh-btn" (click)="loadFactures()">
+    <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+    Actualiser
+  </button>
+</div>
+
+<!-- Stats -->
+<div class="stats-row stats-4">
+  <div class="stat-card" [class.active]="activeTypeFilter === null" (click)="filterByType(null)">
+    <div class="stat-icon total"><span class="material-icons">receipt_long</span></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ factures.length }}</div>
+      <div class="stat-label">Total</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon success-bg"><span class="material-icons">check_circle</span></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ countByStatut('Payée') }}</div>
+      <div class="stat-label">Payées</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning-bg"><span class="material-icons">pending</span></div>
+    <div class="stat-info">
+      <div class="stat-value">{{ countByStatut('À payer') }}</div>
+      <div class="stat-label">À payer</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon amount-bg"><span class="material-icons">payments</span></div>
+    <div class="stat-info">
+      <div class="stat-value amount-value">{{ formatMontant(getTotalMontant()) }}</div>
+      <div class="stat-label">Montant total</div>
+    </div>
+  </div>
+</div>
+
+<!-- Type Filters -->
+<div class="type-filters" *ngIf="types.length > 0">
+  <button class="type-chip" [class.active]="activeTypeFilter === null" (click)="filterByType(null)">
+    Tous
+  </button>
+  <button class="type-chip" *ngFor="let type of types" [class.active]="activeTypeFilter === type" (click)="filterByType(type)">
+    <span class="material-icons">{{ getTypeIcon(type) }}</span>
+    {{ type }} ({{ countByType(type) }})
+  </button>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+  <span class="material-icons search-icon">search</span>
+  <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()"
+    placeholder="Rechercher par client, email, mois, type..." />
+</div>
+
+<!-- Loading -->
+<div class="loading-state" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Chargement des factures...</p>
+</div>
+
+<!-- Empty -->
+<div class="empty-state" *ngIf="!isLoading && filteredFactures.length === 0">
+  <span class="material-icons">receipt_long</span>
+  <p>Aucune facture trouvée.</p>
+</div>
+
+<!-- Table -->
+<div class="table-container" *ngIf="!isLoading && filteredFactures.length > 0">
+  <table class="clients-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Client</th>
+        <th>Type</th>
+        <th>Mois</th>
+        <th>Montant</th>
+        <th>Échéance</th>
+        <th>Statut</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let facture of filteredFactures">
+        <td class="id-cell">#{{ facture.id }}</td>
+        <td>
+          <div class="client-info">
+            <div class="name">{{ facture.userName || 'N/A' }}</div>
+            <div class="assurance-id">{{ facture.userEmail || '—' }}</div>
+          </div>
+        </td>
+        <td>
+          <span class="type-badge">
+            <span class="material-icons">{{ getTypeIcon(facture.typeFacture) }}</span>
+            {{ facture.typeFacture || 'Autre' }}
+          </span>
+        </td>
+        <td>{{ facture.mois || '—' }}</td>
+        <td class="montant-cell">{{ formatMontant(facture.montant) }}</td>
+        <td class="date-cell">{{ formatDate(facture.echeance) }}</td>
+        <td>
+          <span class="status-badge" [ngClass]="getStatutClass(facture.statut)">
+            {{ facture.statut || 'N/A' }}
+          </span>
+        </td>
+        <td>
+          <button class="icon-btn delete-btn" (click)="openDeleteModal(facture)" title="Supprimer">
+            <span class="material-icons">delete</span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header danger"><h2>Supprimer la facture</h2>
+      <button class="close-btn" (click)="closeDeleteModal()"><span class="material-icons">close</span></button>
+    </div>
+    <div class="modal-body" *ngIf="itemToDelete">
+      <div class="delete-warning">
+        <span class="material-icons">warning</span>
+        <p>Supprimer la facture <strong>#{{ itemToDelete.id }}</strong> de <strong>{{ itemToDelete.userName }}</strong> ({{ formatMontant(itemToDelete.montant) }}) ?<br>Cette action est irréversible.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeDeleteModal()">Annuler</button>
+      <button class="btn-delete" (click)="confirmDelete()" [disabled]="isDeleting">
+        <span class="material-icons" *ngIf="!isDeleting">delete_forever</span>
+        {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
+      </button>
+    </div>
+  </div>
+</div>

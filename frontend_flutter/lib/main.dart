@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'routes/app_router.dart';
 import 'providers/auth_provider.dart';
+import 'providers/user_provider.dart';
 import 'core/theme/app_theme.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
@@ -20,6 +21,7 @@ class SmartConstatApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
+        ChangeNotifierProvider<UserProvider>(create: (_) => UserProvider()),
       ],
       child: MaterialApp.router(
         title: 'SmartConstat',

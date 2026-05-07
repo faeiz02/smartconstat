@@ -16,19 +16,10 @@ class _FullscreenCanvasScreenState extends State<FullscreenCanvasScreen> {
   @override
   void initState() {
     super.initState();
-    // Force landscape mode for better drawing experience
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
   }
 
   @override
   void dispose() {
-    // Restore portrait mode when leaving
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
     super.dispose();
   }
 

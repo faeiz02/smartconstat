@@ -1,0 +1,183 @@
+<!-- ════════ ADMIN DASHBOARD ════════ -->
+<ng-container *ngIf="isAdmin()">
+  <!-- Welcome Header -->
+  <div class="welcome-header admin-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Bonjour, {{ userName }} 👋</h1>
+        <p class="subtitle">{{ constats.length }} constats au total</p>
+      </div>
+      <div class="header-actions">
+        <div class="alert-badge pulse" *ngIf="countByStatut('Non examiné') > 0">
+          <span class="material-icons">notifications_active</span>
+          <span>{{ countByStatut('Non examiné') }} en attente</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <div class="stat-card" (click)="filterConstats(null)" [class.active]="activeTab === null">
+      <div class="stat-icon default"><span class="material-icons">list_alt</span></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ constats.length }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+    </div>
+    
+    <div class="stat-card" (click)="filterConstats('Non examiné')" [class.active]="activeTab === 'Non examiné'">
+      <div class="stat-icon warning"><span class="material-icons">pending_actions</span></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ countByStatut('Non examiné') }}</div>
+        <div class="stat-label">Non examinés</div>
+      </div>
+    </div>
+
+    <div class="stat-card" (click)="filterConstats('En cours d\'exécution')" [class.active]="activeTab === 'En cours d\'exécution'">
+      <div class="stat-icon info"><span class="material-icons">hourglass_top</span></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ countByStatut('En cours d\'exécution') }}</div>
+        <div class="stat-label">En cours</div>
+      </div>
+    </div>
+
+    <div class="stat-card" (click)="filterConstats('Traité')" [class.active]="activeTab === 'Traité'">
+      <div class="stat-icon success"><span class="material-icons">check_circle</span></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ countByStatut('Traité') }}</div>
+        <div class="stat-label">Traités</div>
+      </div>
+    </div>
+
+    <div class="stat-card" (click)="filterConstats('Rejeté')" [class.active]="activeTab === 'Rejeté'">
+      <div class="stat-icon danger"><span class="material-icons">cancel</span></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ countByStatut('Rejeté') }}</div>
+        <div class="stat-label">Rejetés</div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- ════════ EMPLOYEE DASHBOARD ════════ -->
+<ng-container *ngIf="!isAdmin()">
+  <!-- Employee Welcome -->
+  <div class="welcome-header employe-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Bienvenue, {{ userName }} 🔧</h1>
+        <p class="subtitle">Espace traitement des dossiers</p>
+      </div>
+      <div class="header-actions">
+        <div class="alert-badge pulse" *ngIf="countByStatut('Non examiné') > 0">
+          <span class="material-icons">assignment_ind</span>
+          <span>{{ countByStatut('Non examiné') }} dossier{{ countByStatut('Non examiné') > 1 ? 's' : '' }} en attente</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Employee Quick Stats -->
+  <div class="stats-row employee-stats">
+    <div class="stat-card" (click)="filterConstats('Non examiné')" [class.active]="activeTab === 'Non examiné'">
+      <div class="stat-icon warning"><span class="material-icons">inbox</span></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ countByStatut('Non examiné') }}</div>
+        <div class="stat-label">File d'attente</div>
+      </div>
+    </div>
+
+    <div class="stat-card" (click)="filterConstats('En cours d\'exécution')" [class.active]="activeTab === 'En cours d\'exécution'">
+      <div class="stat-icon info"><span class="material-icons">assignment_turned_in</span></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ getMyAssignedCount() }}</div>
+        <div class="stat-label">Mes en cours</div>
+      </div>
+    </div>
+
+    <div class="stat-card" (click)="filterConstats('Traité')" [class.active]="activeTab === 'Traité'">
+      <div class="stat-icon success"><span class="material-icons">task_alt</span></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ getMyTreatedCount() }}</div>
+        <div class="stat-label">Traités</div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- ════════ CONSTAT LIST (Common) ════════ -->
+<div class="list-container">
+  <div class="list-header">
+    <h2>{{ isAdmin() ? 'Liste des Constats' : 'Dossiers à traiter' }} ({{ filteredConstats.length }})</h2>
+    <button class="refresh-btn" (click)="loadConstats()">
+      <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+      Actualiser
+    </button>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Chargement des constats...</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading && filteredConstats.length === 0">
+    <span class="material-icons empty-icon">{{ isAdmin() ? 'assignment' : 'check_circle_outline' }}</span>
+    <p *ngIf="isAdmin()">Aucun constat trouvé dans cette catégorie.</p>
+    <p *ngIf="!isAdmin()">🎉 Aucun dossier en attente. Bon travail !</p>
+  </div>
+
+  <div class="constats-grid" *ngIf="!isLoading && filteredConstats.length > 0">
+    <div class="constat-card" *ngFor="let constat of filteredConstats" [routerLink]="['/constat', constat.accidentId || constat.id]">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="material-icons icon-bg" [ngClass]="getStatutClass(constat.statut)">description</span>
+          <div>
+            <h3>Constat #{{ constat.accidentId || constat.id || '?' }}</h3>
+            <span class="date">{{ formatDate(constat.dateTime) }}</span>
+          </div>
+        </div>
+        <div class="status-badge" [ngClass]="getStatutClass(constat.statut)">
+          <span class="material-icons status-icon">{{ getStatutIcon(constat.statut) }}</span>
+          {{ constat.statut || 'Non examiné' }}
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="info-row">
+          <span class="material-icons">location_on</span>
+          <span>{{ constat.lieu || 'Lieu non spécifié' }}</span>
+        </div>
+        
+        <div class="participants">
+          <div class="participant">
+            <span class="label">Véhicule A</span>
+            <span class="name">{{ constat.nomA }} {{ constat.prenomA }}</span>
+            <span class="plate" *ngIf="constat.immatriculationA">{{ constat.immatriculationA }}</span>
+          </div>
+          <div class="vs">VS</div>
+          <div class="participant">
+            <span class="label">Véhicule B</span>
+            <span class="name">{{ constat.nomB }} {{ constat.prenomB }}</span>
+            <span class="plate" *ngIf="constat.immatriculationB">{{ constat.immatriculationB }}</span>
+          </div>
+        </div>
+
+        <div class="card-footer-info">
+          <div class="submitted-by" *ngIf="constat.userName">
+            <span class="material-icons">person</span>
+            Soumis par: {{ constat.userName }}
+          </div>
+          <div class="assigned-to" *ngIf="constat.traiteParNom">
+            <span class="material-icons">engineering</span>
+            Traité par: {{ constat.traiteParNom }}
+          </div>
+          <div class="time-ago" *ngIf="constat.dateTime">
+            <span class="material-icons">schedule</span>
+            {{ getTimeAgo(constat.dateTime) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

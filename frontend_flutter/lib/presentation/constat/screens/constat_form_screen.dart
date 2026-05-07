@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:signature/signature.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,6 +14,7 @@ import '../../../data/services/accident_service.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../widgets/smart_canvas_widget.dart';
+import 'fullscreen_canvas_screen.dart';
 
 class ConstatFormScreen extends StatefulWidget {
   const ConstatFormScreen({super.key});
@@ -89,6 +94,42 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
     "Circulait sur voie de bus": false, "Forçait un passage à niveau": false,
     "Brûlait un feu rouge": false, "Brûlait un stop": false, "Cédait le passage": false,
   };
+
+  bool _isFetchingLocation = false;
+
+  Future<void> _fetchLocation() async {
+    setState(() => _isFetchingLocation = true);
+    try {
+      var status = await Permission.location.request();
+      if (status.isGranted) {
+        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+        
+        final url = Uri.parse('https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}');
+        final response = await http.get(url, headers: {'User-Agent': 'SmartConstatApp'});
+        
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          if (data['display_name'] != null) {
+            _lieuController.text = data['display_name'];
+          } else {
+            _lieuController.text = "${position.latitude}, ${position.longitude}";
+          }
+        } else {
+          _lieuController.text = "${position.latitude}, ${position.longitude}";
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Permission GPS refusée"), backgroundColor: AppColors.redDanger),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erreur lors de la récupération GPS"), backgroundColor: AppColors.redDanger),
+      );
+    } finally {
+      if (mounted) setState(() => _isFetchingLocation = false);
+    }
+  }
 
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
@@ -209,7 +250,19 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        _buildField(_lieuController, "Lieu de l'accident", null, Icons.location_on_outlined),
+        _buildField(
+          _lieuController, 
+          "Lieu de l'accident", 
+          null, 
+          Icons.location_on_outlined, 
+          isRequired: true,
+          suffixIcon: IconButton(
+            icon: _isFetchingLocation 
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.secondaryBlue))
+              : const Icon(Icons.my_location, color: AppColors.secondaryBlue),
+            onPressed: _isFetchingLocation ? null : _fetchLocation,
+          ),
+        ),
         const SizedBox(height: 12),
         _buildField(_temoinsController, "Témoins", "Nom, adresse, téléphone", Icons.people_outline, maxLines: 2),
       ],
@@ -221,26 +274,26 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
     final Color color = isA ? AppColors.secondaryBlue : AppColors.orangeWarning;
     return _buildSectionCard(
       children: [
-        _buildField(isA ? _assureurAController : _assureurBController, "Société d'assurances", null, Icons.business_outlined),
+        _buildField(isA ? _assureurAController : _assureurBController, "Société d'assurances", null, Icons.business_outlined, isRequired: true),
         const SizedBox(height: 10),
-        _buildField(isA ? _contratAController : _contratBController, "N° contrat", null, Icons.description_outlined),
+        _buildField(isA ? _contratAController : _contratBController, "N° contrat", null, Icons.description_outlined, isRequired: true),
         const SizedBox(height: 10),
         Row(children: [
-          Expanded(child: _buildField(isA ? _nomAController : _nomBController, "Nom", null, null)),
+          Expanded(child: _buildField(isA ? _nomAController : _nomBController, "Nom", null, null, isRequired: true)),
           const SizedBox(width: 10),
-          Expanded(child: _buildField(isA ? _prenomAController : _prenomBController, "Prénom", null, null)),
+          Expanded(child: _buildField(isA ? _prenomAController : _prenomBController, "Prénom", null, null, isRequired: true)),
         ]),
         const SizedBox(height: 10),
         _buildField(isA ? _adresseAController : _adresseBController, "Adresse", null, null, maxLines: 2),
         const SizedBox(height: 10),
         Row(children: [
-          Expanded(child: _buildField(isA ? _marqueAController : _marqueBController, "Marque", null, null)),
+          Expanded(child: _buildField(isA ? _marqueAController : _marqueBController, "Marque", null, null, isRequired: true)),
           const SizedBox(width: 10),
-          Expanded(child: _buildField(isA ? _modeleAController : _modeleBController, "Modèle", null, null)),
+          Expanded(child: _buildField(isA ? _modeleAController : _modeleBController, "Modèle", null, null, isRequired: true)),
         ]),
         const SizedBox(height: 10),
         Row(children: [
-          Expanded(flex: 2, child: _buildField(isA ? _immatriculationAController : _immatriculationBController, "Immatriculation", null, Icons.pin_outlined)),
+          Expanded(flex: 2, child: _buildField(isA ? _immatriculationAController : _immatriculationBController, "Immatriculation", null, Icons.pin_outlined, isRequired: true)),
           const SizedBox(width: 10),
           Expanded(child: _buildField(isA ? _paysAController : _paysBController, "Pays", null, null)),
         ]),
@@ -472,11 +525,60 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          "Utilisez les outils ci-dessous : stylo, lignes, flèches, véhicules A/B et texte.",
+          "Cliquez ci-dessous pour ouvrir l'éditeur de croquis en plein écran pour plus de précision.",
           style: TextStyle(color: AppColors.mediumGrey, fontSize: 12),
         ),
-        const SizedBox(height: 12),
-        SmartCanvasWidget(controller: _croquisCanvasController, height: 350),
+        const SizedBox(height: 16),
+        InkWell(
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FullscreenCanvasScreen(controller: _croquisCanvasController),
+              ),
+            );
+            setState(() {}); // Refresh to show thumbnail updates
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            height: 250,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.secondaryBlue.withOpacity(0.3), width: 2),
+              borderRadius: BorderRadius.circular(16),
+              color: AppColors.secondaryBlue.withOpacity(0.02),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Render the canvas as thumbnail but disable touch
+                IgnorePointer(
+                  child: SmartCanvasWidget(controller: _croquisCanvasController, height: 250),
+                ),
+                // Overlay an edit icon
+                Positioned(
+                  bottom: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4))],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.fullscreen, color: Colors.white, size: 22),
+                        SizedBox(width: 8),
+                        Text("Éditer en plein écran", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -523,15 +625,20 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
     );
   }
 
-  Widget _buildField(TextEditingController c, String label, String? hint, IconData? icon, {int maxLines = 1}) {
+  Widget _buildField(TextEditingController c, String label, String? hint, IconData? icon, {int maxLines = 1, bool isRequired = false, Widget? suffixIcon}) {
     return TextFormField(
       controller: c,
       maxLines: maxLines,
       decoration: InputDecoration(
-        labelText: label,
+        labelText: label + (isRequired ? ' *' : ''),
         hintText: hint,
         prefixIcon: icon != null ? Icon(icon, size: 20) : null,
+        suffixIcon: suffixIcon,
       ),
+      validator: isRequired ? (value) {
+        if (value == null || value.trim().isEmpty) return 'Requis';
+        return null;
+      } : null,
     );
   }
 
@@ -557,6 +664,13 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
   }
 
   void _saveConstat() async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Veuillez remplir tous les champs obligatoires (en rouge)."), backgroundColor: AppColors.redDanger),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       List<String> circA = circonstancesA.entries.where((e) => e.value).map((e) => e.key).toList();
       List<String> circB = circonstancesB.entries.where((e) => e.value).map((e) => e.key).toList();
