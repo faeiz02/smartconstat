@@ -1,0 +1,22 @@
+.rating-filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-btn { padding: 6px 14px; border: 1px solid var(--border, #e5e7eb); border-radius: 20px; background: var(--card, white); color: var(--text, #111827); font-size: 13px; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+.filter-btn.active { background: var(--accent, #6366f1); color: white; border-color: var(--accent, #6366f1); }
+.filter-btn:hover:not(.active) { background: var(--surface, #f3f4f6); }
+
+.avis-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.avis-card { background: var(--card, white); border: 1px solid var(--border, #e5e7eb); border-radius: 16px; padding: 18px; transition: box-shadow 0.2s; }
+.avis-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.avis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.avis-user { display: flex; align-items: center; gap: 8px; }
+.user-icon { font-size: 20px; color: var(--accent, #6366f1); }
+.user-name { font-weight: 600; font-size: 14px; }
+.avis-stars { display: flex; align-items: center; gap: 2px; margin-bottom: 10px; }
+.star { font-size: 18px; color: #d1d5db; }
+.star.filled { color: #f59e0b; }
+.rating-value { margin-left: 8px; font-weight: 600; font-size: 14px; color: var(--text-secondary, #6b7280); }
+.avis-comment { font-size: 14px; color: var(--text, #374151); line-height: 1.5; margin: 0 0 12px; }
+.avis-footer { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-secondary, #9ca3af); }
+.avis-date { display: flex; align-items: center; gap: 4px; }
+.avis-date .material-icons { font-size: 14px; }
+.avis-pro { background: var(--surface, #f3f4f6); padding: 2px 8px; border-radius: 6px; font-weight: 500; }
+.comment-preview { font-style: italic; color: var(--text-secondary, #6b7280); padding: 10px; background: var(--surface, #f3f4f6); border-radius: 10px; margin-top: 8px; }

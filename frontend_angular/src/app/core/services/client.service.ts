@@ -59,6 +59,30 @@ export interface HealthcareProfessional {
   bio?: string;
 }
 
+export interface Assurance {
+  id?: number;
+  assuranceId?: string;
+  nom?: string;
+  prenom?: string;
+  cin?: string;
+  phone?: string;
+  vehicleBrand?: string;
+  vehicleModel?: string;
+  vehiclePlate?: string;
+  compagnie?: string;
+  dateExpiration?: string;
+}
+
+export interface AvisAdmin {
+  id?: number;
+  rating?: number;
+  comment?: string;
+  createdAt?: string;
+  userName?: string;
+  userId?: number;
+  professionalId?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -142,4 +166,31 @@ export class ClientService {
   deleteHealthcareProfessional(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/services/healthcare/${id}`);
   }
+
+  // ─── Assurances (Admin CRUD) ───
+  getAllAssurances(): Observable<Assurance[]> {
+    return this.http.get<Assurance[]>(`${this.apiUrl}/assurances/all`);
+  }
+
+  createAssurance(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/assurances`, data);
+  }
+
+  updateAssurance(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/assurances/${id}`, data);
+  }
+
+  deleteAssurance(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/assurances/${id}`);
+  }
+
+  // ─── Avis (Admin Moderation) ───
+  getAllAvis(): Observable<AvisAdmin[]> {
+    return this.http.get<AvisAdmin[]>(`${this.apiUrl}/avis/all`);
+  }
+
+  adminDeleteAvis(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/avis/admin/${id}`);
+  }
 }
+

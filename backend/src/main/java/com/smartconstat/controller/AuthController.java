@@ -1,10 +1,12 @@
 package com.smartconstat.controller;
 
 import com.smartconstat.dto.*;
+import com.smartconstat.model.User;
 import com.smartconstat.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -153,8 +155,15 @@ public class AuthController {
         return ResponseEntity.ok().header("Content-Type", "text/html").body(html);
     }
 
+    /** Setup admin — nécessite une authentification admin */
     @GetMapping("/setup-admin")
-    public ResponseEntity<?> setupAdmin() {
+    public ResponseEntity<?> setupAdmin(@AuthenticationPrincipal User currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
+        }
+        if (!"admin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Accès réservé aux administrateurs"));
+        }
         return ResponseEntity.ok(authService.setupAdminAccount());
     }
 }

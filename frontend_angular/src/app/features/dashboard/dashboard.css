@@ -409,9 +409,99 @@
   color: #2196f3;
 }
 
+/* ─── KPI Row ─── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.kpi-icon { font-size: 20px; }
+.kpi-icon.success { color: #4caf50; }
+.kpi-icon.danger { color: #f44336; }
+.kpi-icon.warning { color: #ff9800; }
+.kpi-icon.info { color: #2196f3; }
+
+.kpi-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a2e;
+  font-family: 'Inter', sans-serif;
+  margin-bottom: 10px;
+}
+
+.kpi-bar {
+  height: 6px;
+  background: #f0f0f5;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.kpi-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s ease;
+}
+
+.kpi-bar-fill.success { background: linear-gradient(90deg, #4caf50, #66bb6a); }
+.kpi-bar-fill.danger { background: linear-gradient(90deg, #f44336, #ef5350); }
+.kpi-bar-fill.warning { background: linear-gradient(90deg, #ff9800, #ffa726); }
+.kpi-bar-fill.info { background: linear-gradient(90deg, #2196f3, #42a5f5); }
+
+/* ─── Export Section ─── */
+.export-section {
+  margin-bottom: 24px;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(108, 92, 231, 0.3);
+}
+
+.export-btn .material-icons { font-size: 18px; }
+
 /* ─── Responsive ─── */
 @media (max-width: 1200px) {
   .stats-row { grid-template-columns: repeat(3, 1fr); }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
@@ -440,3 +530,6 @@
 
 :host-context([data-theme="dark"]) .refresh-btn { border-color: #252840; }
 
+:host-context([data-theme="dark"]) .kpi-card { background: #1a1d2e; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+:host-context([data-theme="dark"]) .kpi-value { color: #f0f0f0; }
+:host-context([data-theme="dark"]) .kpi-bar { background: #252840; }

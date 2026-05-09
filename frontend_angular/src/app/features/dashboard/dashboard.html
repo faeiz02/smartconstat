@@ -58,6 +58,58 @@
       </div>
     </div>
   </div>
+
+  <!-- KPI & Progress Bars -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="material-icons kpi-icon success">trending_up</span>
+        <span class="kpi-title">Taux d'acceptation</span>
+      </div>
+      <div class="kpi-value">{{ getAcceptanceRate() }}</div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill success" [style.width]="getStatutPercentage('Traité') + '%'"></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="material-icons kpi-icon danger">trending_down</span>
+        <span class="kpi-title">Taux de rejet</span>
+      </div>
+      <div class="kpi-value">{{ getRejectionRate() }}</div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill danger" [style.width]="getStatutPercentage('Rejeté') + '%'"></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="material-icons kpi-icon warning">pending</span>
+        <span class="kpi-title">En attente</span>
+      </div>
+      <div class="kpi-value">{{ getStatutPercentage('Non examiné') }}%</div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill warning" [style.width]="getStatutPercentage('Non examiné') + '%'"></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="material-icons kpi-icon info">autorenew</span>
+        <span class="kpi-title">En cours</span>
+      </div>
+      <div class="kpi-value">{{ getStatutPercentage("En cours d'exécution") }}%</div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill info" [style.width]="getStatutPercentage('En cours d\'exécution') + '%'"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Button -->
+  <div class="export-section" *ngIf="constats.length > 0">
+    <button class="export-btn" (click)="exportCSV()">
+      <span class="material-icons">download</span>
+      Exporter en CSV ({{ constats.length }} constats)
+    </button>
+  </div>
 </ng-container>
 
 <!-- ════════ EMPLOYEE DASHBOARD ════════ -->

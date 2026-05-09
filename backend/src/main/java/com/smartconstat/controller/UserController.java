@@ -4,6 +4,7 @@ import com.smartconstat.model.User;
 import com.smartconstat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -17,9 +18,12 @@ public class UserController {
     private final UserRepository userRepository;
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAllUsers(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+    public ResponseEntity<?> getAllUsers(@AuthenticationPrincipal User currentUser) {
+        if (currentUser == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
+        }
+        if (!"admin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Accès réservé aux administrateurs"));
         }
 
         List<User> users = userRepository.findAll();
@@ -31,11 +35,14 @@ public class UserController {
     /** Update user role (admin only) */
     @PutMapping("/{id}/role")
     public ResponseEntity<?> updateUserRole(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User currentUser,
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (currentUser == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
+        }
+        if (!"admin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Accès réservé aux administrateurs"));
         }
         String newRole = body.get("role");
         if (newRole == null || newRole.isBlank()) {
@@ -59,10 +66,13 @@ public class UserController {
     /** Delete a user (admin only) */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User currentUser,
             @PathVariable Long id) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (currentUser == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
+        }
+        if (!"admin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Accès réservé aux administrateurs"));
         }
         Optional<User> opt = userRepository.findById(id);
         if (opt.isEmpty()) {

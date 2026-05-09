@@ -217,6 +217,36 @@
             </div>
           </div>
         </div>
+
+        <!-- Pièces jointes -->
+        <div class="section-card" *ngIf="constat.croquisPath || constat.signatureAPath || constat.signatureBPath || constat.photosPaths">
+          <div class="section-header files-header">
+            <span class="material-icons">attach_file</span>
+            <h2>Pièces Jointes</h2>
+          </div>
+          <div class="section-body">
+            <div class="files-grid">
+              <div class="file-item" *ngIf="constat.croquisPath">
+                <span class="file-label">Croquis</span>
+                <img [src]="'http://localhost:8082/' + constat.croquisPath" alt="Croquis" class="file-img" />
+              </div>
+              <div class="file-item" *ngIf="constat.signatureAPath">
+                <span class="file-label">Signature A</span>
+                <img [src]="'http://localhost:8082/' + constat.signatureAPath" alt="Signature A" class="file-img" />
+              </div>
+              <div class="file-item" *ngIf="constat.signatureBPath">
+                <span class="file-label">Signature B</span>
+                <img [src]="'http://localhost:8082/' + constat.signatureBPath" alt="Signature B" class="file-img" />
+              </div>
+            </div>
+            <div class="photos-section" *ngIf="constat.photosPaths">
+              <span class="file-label">Photos de l'accident</span>
+              <div class="photos-grid">
+                <img *ngFor="let photo of constat.photosPaths.split(',')" [src]="'http://localhost:8082/' + photo.trim()" alt="Photo accident" class="file-img photo-img" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

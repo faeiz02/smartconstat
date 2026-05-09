@@ -31,6 +31,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // setup-admin requires authentication (before the wildcard rule)
+                .requestMatchers("/api/auth/setup-admin").authenticated()
                 // Public endpoints
                 .requestMatchers(
                     "/api/auth/**",
@@ -38,6 +40,7 @@ public class SecurityConfig {
                     "/api/services/healthcare",
                     "/api/services/assistance-numbers",
                     "/api/services/assistance-types",
+                    "/uploads/**",
                     "/h2-console/**",
                     "/error"
                 ).permitAll()

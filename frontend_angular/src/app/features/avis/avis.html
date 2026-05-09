@@ -1,0 +1,89 @@
+<div class="page-header">
+  <div>
+    <h1>Modération des Avis</h1>
+    <p class="subtitle">{{ avis.length }} avis au total — Moyenne : ⭐ {{ getAverageRating() }}/5</p>
+  </div>
+  <div class="header-actions">
+    <button class="export-btn" (click)="exportCSV()" *ngIf="avis.length > 0">
+      <span class="material-icons">download</span> Export CSV
+    </button>
+    <button class="refresh-btn" (click)="loadData()">
+      <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+    </button>
+  </div>
+</div>
+
+<!-- Rating filters -->
+<div class="rating-filters">
+  <button class="filter-btn" [class.active]="ratingFilter === null" (click)="filterByRating(null)">Tous ({{ avis.length }})</button>
+  <button class="filter-btn" *ngFor="let star of [5,4,3,2,1]" [class.active]="ratingFilter === star" (click)="filterByRating(star)">
+    {{ star }} ⭐
+  </button>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+  <span class="material-icons search-icon">search</span>
+  <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()"
+    placeholder="Rechercher par nom d'utilisateur ou commentaire..." />
+</div>
+
+<!-- Loading -->
+<div class="loading-state" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Chargement des avis...</p>
+</div>
+
+<!-- Empty -->
+<div class="empty-state" *ngIf="!isLoading && filteredAvis.length === 0">
+  <span class="material-icons">rate_review</span>
+  <p>Aucun avis trouvé.</p>
+</div>
+
+<!-- Avis list -->
+<div class="avis-grid" *ngIf="!isLoading && filteredAvis.length > 0">
+  <div class="avis-card" *ngFor="let a of filteredAvis">
+    <div class="avis-header">
+      <div class="avis-user">
+        <span class="material-icons user-icon">person</span>
+        <span class="user-name">{{ a.userName || 'Anonyme' }}</span>
+      </div>
+      <button class="icon-btn delete" (click)="openDeleteModal(a)" title="Supprimer cet avis">
+        <span class="material-icons">delete</span>
+      </button>
+    </div>
+    <div class="avis-stars">
+      <span *ngFor="let s of getStars(a.rating)" class="material-icons star" [class.filled]="s === 1">
+        {{ s === 1 ? 'star' : 'star_outline' }}
+      </span>
+      <span class="rating-value">{{ a.rating }}</span>
+    </div>
+    <p class="avis-comment">{{ a.comment || 'Pas de commentaire' }}</p>
+    <div class="avis-footer">
+      <span class="avis-date">
+        <span class="material-icons">schedule</span>
+        {{ formatDate(a.createdAt) }}
+      </span>
+      <span class="avis-pro">Pro #{{ a.professionalId }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header danger">
+      <h2>Supprimer l'avis</h2>
+    </div>
+    <div class="modal-body">
+      <p>Supprimer l'avis de <strong>{{ itemToDelete?.userName }}</strong> ({{ itemToDelete?.rating }} ⭐) ?</p>
+      <p class="comment-preview" *ngIf="itemToDelete?.comment">"{{ itemToDelete?.comment }}"</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeDeleteModal()">Annuler</button>
+      <button class="btn-delete" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
+      </button>
+    </div>
+  </div>
+</div>

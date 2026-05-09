@@ -82,6 +82,21 @@ public class AvisService {
         return toDto(savedAvis);
     }
 
+    public List<AvisDto> getAllAvis() {
+        return avisRepository.findAll().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void adminDeleteAvis(Long avisId) {
+        Avis avis = avisRepository.findById(avisId)
+                .orElseThrow(() -> new RuntimeException("Avis non trouvé"));
+        HealthcareProfessional professional = avis.getHealthcareProfessional();
+        avisRepository.delete(avis);
+        recalculateRating(professional);
+    }
+
     @Transactional
     public void deleteAvis(Long avisId) {
         User user = getCurrentUser();

@@ -1,0 +1,179 @@
+<div class="page-header">
+  <div>
+    <h1>Gestion des Assurances</h1>
+    <p class="subtitle">{{ assurances.length }} contrats enregistrés</p>
+  </div>
+  <div class="header-actions">
+    <button class="export-btn" (click)="exportCSV()" *ngIf="assurances.length > 0">
+      <span class="material-icons">download</span> Export CSV
+    </button>
+    <button class="add-btn" (click)="openAddModal()">
+      <span class="material-icons">add</span> Ajouter
+    </button>
+    <button class="refresh-btn" (click)="loadData()">
+      <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+    </button>
+  </div>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+  <span class="material-icons search-icon">search</span>
+  <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()"
+    placeholder="Rechercher par ID, nom, CIN, compagnie, plaque..." />
+</div>
+
+<!-- Loading -->
+<div class="loading-state" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Chargement des assurances...</p>
+</div>
+
+<!-- Empty -->
+<div class="empty-state" *ngIf="!isLoading && filteredAssurances.length === 0">
+  <span class="material-icons">policy</span>
+  <p>Aucune assurance trouvée.</p>
+</div>
+
+<!-- Table -->
+<div class="table-container" *ngIf="!isLoading && filteredAssurances.length > 0">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Assuré</th>
+        <th>ID Assurance</th>
+        <th>CIN</th>
+        <th>Véhicule</th>
+        <th>Compagnie</th>
+        <th>Expiration</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let a of filteredAssurances">
+        <td>
+          <div class="user-cell">
+            <div class="avatar">{{ getInitials(a) }}</div>
+            <div>
+              <div class="name">{{ a.nom }} {{ a.prenom }}</div>
+              <div class="phone">{{ a.phone || '—' }}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="id-badge">{{ a.assuranceId }}</span></td>
+        <td>{{ a.cin || '—' }}</td>
+        <td>
+          <span *ngIf="a.vehicleBrand">{{ a.vehicleBrand }} {{ a.vehicleModel }}</span>
+          <span *ngIf="!a.vehicleBrand" class="na">—</span>
+          <div class="plate" *ngIf="a.vehiclePlate">{{ a.vehiclePlate }}</div>
+        </td>
+        <td>{{ a.compagnie || '—' }}</td>
+        <td>
+          <span class="expiration-badge" [class.expired]="isExpired(a.dateExpiration)">
+            <span class="material-icons">{{ isExpired(a.dateExpiration) ? 'warning' : 'event' }}</span>
+            {{ formatDate(a.dateExpiration) }}
+          </span>
+        </td>
+        <td class="actions-cell">
+          <button class="icon-btn edit" (click)="openEditModal(a)" title="Modifier">
+            <span class="material-icons">edit</span>
+          </button>
+          <button class="icon-btn delete" (click)="openDeleteModal(a)" title="Supprimer">
+            <span class="material-icons">delete</span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditing ? 'Modifier' : 'Ajouter' }} une assurance</h2>
+      <button class="close-btn" (click)="closeModal()"><span class="material-icons">close</span></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>ID Assurance *</label>
+          <input type="text" [(ngModel)]="editItem.assuranceId" [disabled]="isEditing" placeholder="ASR-001" />
+        </div>
+        <div class="form-group">
+          <label>CIN *</label>
+          <input type="text" [(ngModel)]="editItem.cin" placeholder="12345678" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom</label>
+          <input type="text" [(ngModel)]="editItem.nom" placeholder="Ben Ali" />
+        </div>
+        <div class="form-group">
+          <label>Prénom</label>
+          <input type="text" [(ngModel)]="editItem.prenom" placeholder="Ahmed" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="text" [(ngModel)]="editItem.phone" placeholder="+216 xx xxx xxx" />
+        </div>
+        <div class="form-group">
+          <label>Compagnie</label>
+          <input type="text" [(ngModel)]="editItem.compagnie" placeholder="STAR, GAT, COMAR..." />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Marque véhicule</label>
+          <input type="text" [(ngModel)]="editItem.vehicleBrand" placeholder="Peugeot" />
+        </div>
+        <div class="form-group">
+          <label>Modèle</label>
+          <input type="text" [(ngModel)]="editItem.vehicleModel" placeholder="208" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Plaque</label>
+          <input type="text" [(ngModel)]="editItem.vehiclePlate" placeholder="123 TU 4567" />
+        </div>
+        <div class="form-group">
+          <label>Date d'expiration</label>
+          <input type="date" [(ngModel)]="editItem.dateExpiration" />
+        </div>
+      </div>
+      <div class="modal-message" *ngIf="modalMessage" [class.success]="modalMessageType==='success'" [class.error]="modalMessageType==='error'">
+        {{ modalMessage }}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModal()">Annuler</button>
+      <button class="btn-save" (click)="saveItem()" [disabled]="isSaving">
+        <span class="spinner small" *ngIf="isSaving"></span>
+        {{ isSaving ? 'En cours...' : (isEditing ? 'Modifier' : 'Ajouter') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header danger">
+      <h2>Supprimer l'assurance</h2>
+    </div>
+    <div class="modal-body">
+      <p>Êtes-vous sûr de vouloir supprimer le contrat <strong>{{ itemToDelete?.assuranceId }}</strong> de <strong>{{ itemToDelete?.nom }} {{ itemToDelete?.prenom }}</strong> ?</p>
+      <p class="warning-text">⚠️ Les clients associés ne pourront plus s'inscrire avec cet ID.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeDeleteModal()">Annuler</button>
+      <button class="btn-delete" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
+      </button>
+    </div>
+  </div>
+</div>

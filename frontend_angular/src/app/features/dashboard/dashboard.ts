@@ -141,4 +141,48 @@ export class DashboardComponent implements OnInit {
     if (diffD === 1) return 'Hier';
     return `Il y a ${diffD} jours`;
   }
+
+  // ─── Statistics ───
+  getAcceptanceRate(): string {
+    const treated = this.constats.filter(c => c.statut === 'Traité').length;
+    const total = this.constats.filter(c => c.statut === 'Traité' || c.statut === 'Rejeté').length;
+    if (total === 0) return '—';
+    return Math.round((treated / total) * 100) + '%';
+  }
+
+  getRejectionRate(): string {
+    const rejected = this.constats.filter(c => c.statut === 'Rejeté').length;
+    const total = this.constats.filter(c => c.statut === 'Traité' || c.statut === 'Rejeté').length;
+    if (total === 0) return '—';
+    return Math.round((rejected / total) * 100) + '%';
+  }
+
+  getStatutPercentage(statut: string): number {
+    if (this.constats.length === 0) return 0;
+    return Math.round((this.countByStatut(statut) / this.constats.length) * 100);
+  }
+
+  // ─── Export CSV ───
+  exportCSV(): void {
+    const headers = ['ID', 'Date', 'Lieu', 'Statut', 'Conducteur A', 'Immat A', 'Conducteur B', 'Immat B', 'Soumis par', 'Traité par'];
+    const rows = this.constats.map(c => [
+      c.accidentId || c.id,
+      c.dateTime,
+      c.lieu,
+      c.statut,
+      `${c.nomA || ''} ${c.prenomA || ''}`.trim(),
+      c.immatriculationA,
+      `${c.nomB || ''} ${c.prenomB || ''}`.trim(),
+      c.immatriculationB,
+      c.userName,
+      c.traiteParNom
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v || ''}"`).join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'constats.csv'; a.click();
+    URL.revokeObjectURL(url);
+  }
 }
+

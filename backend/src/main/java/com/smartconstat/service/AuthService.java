@@ -27,15 +27,27 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
 
+    @org.springframework.beans.factory.annotation.Value("${app.admin.email:sarra@smartconstat.tn}")
+    private String adminEmail;
+
+    @org.springframework.beans.factory.annotation.Value("${app.admin.password:admin123}")
+    private String adminPassword;
+
+    @org.springframework.beans.factory.annotation.Value("${app.employe.email:employe@smartconstat.tn}")
+    private String employeEmail;
+
+    @org.springframework.beans.factory.annotation.Value("${app.employe.password:employe123}")
+    private String employePassword;
+
     @jakarta.annotation.PostConstruct
     public void initAccounts() {
         // ─── Compte Admin ───
         try {
-            Optional<User> opt = userRepository.findByEmail("sarra@smartconstat.tn");
+            Optional<User> opt = userRepository.findByEmail(adminEmail);
             User admin = opt.orElseGet(User::new);
             
             if (opt.isEmpty()) {
-                admin.setEmail("sarra@smartconstat.tn");
+                admin.setEmail(adminEmail);
                 admin.setNom("Ben Ali");
                 admin.setPrenom("Sarra");
                 admin.setCin("ADMIN001");
@@ -43,15 +55,14 @@ public class AuthService {
                 admin.setAssuranceId("ADMIN_SARRA");
             }
             
-            admin.setPasswordHash(passwordEncoder.encode("admin123"));
+            admin.setPasswordHash(passwordEncoder.encode(adminPassword));
             admin.setRole("admin");
             admin.setVerified(true);
             userRepository.save(admin);
             
             System.out.println("==================================================");
             System.out.println("✅ COMPTE ADMIN PRÊT !");
-            System.out.println("   Email: sarra@smartconstat.tn");
-            System.out.println("   Mdp:   admin123");
+            System.out.println("   Email: " + adminEmail);
             System.out.println("==================================================");
         } catch (Exception e) {
             System.err.println("Impossible de configurer le compte admin: " + e.getMessage());
@@ -59,11 +70,11 @@ public class AuthService {
 
         // ─── Compte Employé ───
         try {
-            Optional<User> optEmp = userRepository.findByEmail("employe@smartconstat.tn");
+            Optional<User> optEmp = userRepository.findByEmail(employeEmail);
             User employe = optEmp.orElseGet(User::new);
 
             if (optEmp.isEmpty()) {
-                employe.setEmail("employe@smartconstat.tn");
+                employe.setEmail(employeEmail);
                 employe.setNom("Trabelsi");
                 employe.setPrenom("Ahmed");
                 employe.setCin("EMP001");
@@ -71,15 +82,14 @@ public class AuthService {
                 employe.setAssuranceId("EMP_AHMED");
             }
 
-            employe.setPasswordHash(passwordEncoder.encode("employe123"));
+            employe.setPasswordHash(passwordEncoder.encode(employePassword));
             employe.setRole("employe");
             employe.setVerified(true);
             userRepository.save(employe);
 
             System.out.println("==================================================");
             System.out.println("✅ COMPTE EMPLOYÉ PRÊT !");
-            System.out.println("   Email: employe@smartconstat.tn");
-            System.out.println("   Mdp:   employe123");
+            System.out.println("   Email: " + employeEmail);
             System.out.println("==================================================");
         } catch (Exception e) {
             System.err.println("Impossible de configurer le compte employé: " + e.getMessage());
@@ -89,7 +99,7 @@ public class AuthService {
     public Map<String, Object> setupAdminAccount() {
         Map<String, Object> result = new LinkedHashMap<>();
         try {
-            Optional<User> opt = userRepository.findByEmail("sarra@smartconstat.tn");
+            Optional<User> opt = userRepository.findByEmail(adminEmail);
             User admin;
             
             if (opt.isPresent()) {
@@ -97,7 +107,7 @@ public class AuthService {
                 result.put("action", "UPDATE");
             } else {
                 admin = new User();
-                admin.setEmail("sarra@smartconstat.tn");
+                admin.setEmail(adminEmail);
                 admin.setNom("Ben Ali");
                 admin.setPrenom("Sarra");
                 admin.setCin("ADMIN001");
@@ -106,21 +116,13 @@ public class AuthService {
                 result.put("action", "CREATE");
             }
             
-            String rawPassword = "admin123";
-            String encodedPassword = passwordEncoder.encode(rawPassword);
-            admin.setPasswordHash(encodedPassword);
+            admin.setPasswordHash(passwordEncoder.encode(adminPassword));
             admin.setRole("admin");
             admin.setVerified(true);
             userRepository.save(admin);
             
-            // Vérification immédiate
-            boolean matchTest = passwordEncoder.matches(rawPassword, encodedPassword);
-            
             result.put("success", true);
-            result.put("email", "sarra@smartconstat.tn");
-            result.put("password", rawPassword);
-            result.put("hash_preview", encodedPassword.substring(0, 20) + "...");
-            result.put("password_match_test", matchTest);
+            result.put("email", adminEmail);
             result.put("role", admin.getRole());
             result.put("verified", admin.isVerified());
             result.put("user_id", admin.getId());

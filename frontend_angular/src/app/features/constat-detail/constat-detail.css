@@ -214,3 +214,16 @@
 }
 .spinner.small { width: 24px; height: 24px; border-width: 2px; margin: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Files Section */
+.files-header .material-icons { color: #10b981; }
+.files-header { background: rgba(16,185,129,0.06); }
+.files-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+.file-item { text-align: center; }
+.file-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.file-img { width: 100%; max-height: 200px; object-fit: contain; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.02); }
+.photos-section { margin-top: 8px; }
+.photos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 8px; }
+.photo-img { max-height: 160px; cursor: pointer; transition: transform 0.2s; }
+.photo-img:hover { transform: scale(1.05); }
+

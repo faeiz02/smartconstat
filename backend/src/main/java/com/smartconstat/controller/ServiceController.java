@@ -16,6 +16,17 @@ public class ServiceController {
 
     private final AppServicesService appServicesService;
 
+    // ─── Helper : vérification du rôle admin ───
+    private ResponseEntity<?> requireAdmin(User user) {
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
+        }
+        if (!"admin".equals(user.getRole())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Accès réservé aux administrateurs"));
+        }
+        return null;
+    }
+
     @GetMapping("/factures")
     public ResponseEntity<?> getFactures(
             @AuthenticationPrincipal User user,
@@ -110,22 +121,19 @@ public class ServiceController {
 
     /** Admin: Get ALL factures across all users */
     @GetMapping("/factures/all")
-    public ResponseEntity<?> getAllFactures(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(java.util.Map.of("error", "Non authentifié"));
-        }
+    public ResponseEntity<?> getAllFactures(@AuthenticationPrincipal User user) {
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         return ResponseEntity.ok(appServicesService.getAllFactures());
     }
 
     /** Admin: Delete any facture */
     @DeleteMapping("/factures/admin/{id}")
     public ResponseEntity<?> adminDeleteFacture(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @PathVariable Long id) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         if (appServicesService.adminDeleteFacture(id)) {
             return ResponseEntity.ok(Map.of("success", true, "message", "Facture supprimée"));
         }
@@ -135,23 +143,21 @@ public class ServiceController {
     // ═══ HEALTHCARE CRUD ═══
     @PostMapping("/healthcare")
     public ResponseEntity<?> createHealthcare(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @RequestBody com.smartconstat.model.HealthcareProfessional hp) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         var created = appServicesService.createHealthcareProfessional(hp);
         return ResponseEntity.ok(Map.of("success", true, "id", created.getId()));
     }
 
     @PutMapping("/healthcare/{id}")
     public ResponseEntity<?> updateHealthcare(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @PathVariable Long id,
             @RequestBody com.smartconstat.model.HealthcareProfessional hp) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         var updated = appServicesService.updateHealthcareProfessional(id, hp);
         if (updated != null) return ResponseEntity.ok(Map.of("success", true));
         return ResponseEntity.status(404).body(Map.of("error", "Non trouvé"));
@@ -159,11 +165,10 @@ public class ServiceController {
 
     @DeleteMapping("/healthcare/{id}")
     public ResponseEntity<?> deleteHealthcare(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @PathVariable Long id) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         if (appServicesService.deleteHealthcareProfessional(id))
             return ResponseEntity.ok(Map.of("success", true, "message", "Supprimé"));
         return ResponseEntity.status(404).body(Map.of("error", "Non trouvé"));
@@ -172,23 +177,21 @@ public class ServiceController {
     // ═══ EMERGENCY NUMBERS CRUD ═══
     @PostMapping("/assistance-numbers")
     public ResponseEntity<?> createEmergencyNumber(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @RequestBody com.smartconstat.model.EmergencyNumber en) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         var created = appServicesService.createEmergencyNumber(en);
         return ResponseEntity.ok(Map.of("success", true, "id", created.getId()));
     }
 
     @PutMapping("/assistance-numbers/{id}")
     public ResponseEntity<?> updateEmergencyNumber(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @PathVariable Long id,
             @RequestBody com.smartconstat.model.EmergencyNumber en) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         var updated = appServicesService.updateEmergencyNumber(id, en);
         if (updated != null) return ResponseEntity.ok(Map.of("success", true));
         return ResponseEntity.status(404).body(Map.of("error", "Non trouvé"));
@@ -196,11 +199,10 @@ public class ServiceController {
 
     @DeleteMapping("/assistance-numbers/{id}")
     public ResponseEntity<?> deleteEmergencyNumber(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @PathVariable Long id) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         if (appServicesService.deleteEmergencyNumber(id))
             return ResponseEntity.ok(Map.of("success", true, "message", "Supprimé"));
         return ResponseEntity.status(404).body(Map.of("error", "Non trouvé"));
@@ -209,23 +211,21 @@ public class ServiceController {
     // ═══ ASSISTANCE TYPES CRUD ═══
     @PostMapping("/assistance-types")
     public ResponseEntity<?> createAssistanceType(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @RequestBody com.smartconstat.model.AssistanceType at) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         var created = appServicesService.createAssistanceType(at);
         return ResponseEntity.ok(Map.of("success", true, "id", created.getId()));
     }
 
     @PutMapping("/assistance-types/{id}")
     public ResponseEntity<?> updateAssistanceType(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @PathVariable Long id,
             @RequestBody com.smartconstat.model.AssistanceType at) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         var updated = appServicesService.updateAssistanceType(id, at);
         if (updated != null) return ResponseEntity.ok(Map.of("success", true));
         return ResponseEntity.status(404).body(Map.of("error", "Non trouvé"));
@@ -233,11 +233,10 @@ public class ServiceController {
 
     @DeleteMapping("/assistance-types/{id}")
     public ResponseEntity<?> deleteAssistanceType(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @AuthenticationPrincipal User user,
             @PathVariable Long id) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", "Non authentifié"));
-        }
+        ResponseEntity<?> check = requireAdmin(user);
+        if (check != null) return check;
         if (appServicesService.deleteAssistanceType(id))
             return ResponseEntity.ok(Map.of("success", true, "message", "Supprimé"));
         return ResponseEntity.status(404).body(Map.of("error", "Non trouvé"));

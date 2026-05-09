@@ -43,6 +43,12 @@ export interface Constat {
   autresDegats?: string;
   blesses?: boolean;
   interventionPolice?: boolean;
+  
+  // Fichiers uploadés
+  croquisPath?: string;
+  signatureAPath?: string;
+  signatureBPath?: string;
+  photosPaths?: string;
 }
 
 @Injectable({
