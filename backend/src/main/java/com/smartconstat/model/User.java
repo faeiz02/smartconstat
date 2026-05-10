@@ -37,10 +37,18 @@ public class User {
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
+    @Builder.Default
     private String role = "client"; // "client", "admin", "employe"
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean isVerified = false;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean active = true;
+
+    private LocalDateTime lastLoginAt;
 
     @PrePersist
     protected void onCreate() {

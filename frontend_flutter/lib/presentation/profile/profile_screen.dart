@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../../data/models/user_model.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/services/auth_service.dart';
-import '../../core/storage/secure_storage_service.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/user_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   final UserModel user;
@@ -153,11 +155,11 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.verified_user_outlined, color: AppColors.secondaryBlue, size: 18),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           "Données sécurisées — Chiffrement AES-256",
                           style: TextStyle(
@@ -176,8 +178,8 @@ class ProfileScreen extends StatelessWidget {
                     height: 54,
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        // Supprimer le token sécurisé
-                        await SecureStorageService.deleteToken();
+                        await context.read<UserProvider>().clearUser();
+                        await context.read<AuthProvider>().logout();
                         if (context.mounted) {
                           context.go('/');
                         }

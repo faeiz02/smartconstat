@@ -39,18 +39,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     ).animate(
         CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
     _animController.forward();
-
-    // Tenter la restauration automatique de session
-    _tryAutoLogin();
-  }
-
-  Future<void> _tryAutoLogin() async {
-    final userProvider = context.read<UserProvider>();
-    final success = await userProvider.tryAutoLogin();
-    if (success && mounted && userProvider.user != null) {
-      context.read<AuthProvider>().setAuthenticatedUser(userProvider.user!);
-      context.go('/home', extra: userProvider.user!);
-    }
   }
 
   @override
@@ -194,8 +182,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               gradient: AppColors.accentGradient,
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      AppColors.accentCyan.withOpacity(0.35),
+                                  color: AppColors.accentCyan.withOpacity(0.35),
                                   blurRadius: 30,
                                   offset: const Offset(0, 10),
                                 ),
@@ -233,8 +220,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           ClipRRect(
                             borderRadius: BorderRadius.circular(24),
                             child: BackdropFilter(
-                              filter:
-                                  ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                               child: Container(
                                 padding: const EdgeInsets.all(24),
                                 decoration: BoxDecoration(
@@ -271,8 +257,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       controller: emailController,
                                       hint: "Adresse email",
                                       icon: Icons.email_outlined,
-                                      keyboardType:
-                                          TextInputType.emailAddress,
+                                      keyboardType: TextInputType.emailAddress,
                                     ),
                                     const SizedBox(height: 14),
 
@@ -280,12 +265,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                     Container(
                                       decoration: BoxDecoration(
                                         color: Colors.white,
-                                        borderRadius:
-                                            BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(16),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black
-                                                .withOpacity(0.05),
+                                            color:
+                                                Colors.black.withOpacity(0.05),
                                             blurRadius: 12,
                                             offset: const Offset(0, 4),
                                           ),
@@ -308,15 +292,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                           ),
                                           prefixIcon: const Icon(
                                               Icons.lock_outline_rounded,
-                                              color:
-                                                  AppColors.secondaryBlue),
+                                              color: AppColors.secondaryBlue),
                                           suffixIcon: IconButton(
                                             icon: Icon(
                                               _obscure
-                                                  ? Icons
-                                                      .visibility_off_rounded
-                                                  : Icons
-                                                      .visibility_rounded,
+                                                  ? Icons.visibility_off_rounded
+                                                  : Icons.visibility_rounded,
                                               color: AppColors.mediumGrey,
                                             ),
                                             onPressed: () => setState(
@@ -333,16 +314,18 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       ),
                                     ),
                                     const SizedBox(height: 12),
-                                    
+
                                     // Forgot Password
                                     Align(
                                       alignment: Alignment.centerRight,
                                       child: TextButton(
-                                        onPressed: () => context.push('/forgot-password'),
+                                        onPressed: () =>
+                                            context.push('/forgot-password'),
                                         style: TextButton.styleFrom(
                                           padding: EdgeInsets.zero,
                                           minimumSize: const Size(50, 30),
-                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          tapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
                                         ),
                                         child: const Text(
                                           "Mot de passe oublié ?",
@@ -362,11 +345,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       width: double.infinity,
                                       height: 56,
                                       child: ElevatedButton(
-                                        onPressed:
-                                            isLoading ? null : _login,
+                                        onPressed: isLoading ? null : _login,
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              AppColors.accentCyan,
+                                          backgroundColor: AppColors.accentCyan,
                                           foregroundColor: Colors.white,
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
@@ -388,8 +369,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                               )
                                             : const Row(
                                                 mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .center,
+                                                    MainAxisAlignment.center,
                                                 children: [
                                                   Text(
                                                     "SE CONNECTER",
@@ -427,8 +407,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
                                   "OU",
                                   style: TextStyle(
@@ -460,8 +440,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.white,
                                 side: BorderSide(
-                                  color: AppColors.greenSuccess
-                                      .withOpacity(0.7),
+                                  color:
+                                      AppColors.greenSuccess.withOpacity(0.7),
                                   width: 1.5,
                                 ),
                                 shape: RoundedRectangleBorder(
@@ -474,8 +454,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.person_add_alt_1_rounded,
-                                      size: 20,
-                                      color: AppColors.greenSuccess),
+                                      size: 20, color: AppColors.greenSuccess),
                                   SizedBox(width: 10),
                                   Text(
                                     "PAS DE COMPTE ? CRÉER UN",

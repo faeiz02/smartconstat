@@ -1,7 +1,14 @@
 /// Configuration de l'URL du backend Spring Boot.
 class ApiConstants {
   // Appareil physique (votre IP locale + Port 8082)
-  static const String baseUrl = 'http://192.168.1.189:8082/api';
+  static const String backendUrl = String.fromEnvironment(
+    'BACKEND_URL',
+    defaultValue: 'http://192.168.1.189:8082',
+  );
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '$backendUrl/api',
+  );
 
   // Endpoints Auth
   static const String login = '$baseUrl/auth/login';
@@ -17,6 +24,7 @@ class ApiConstants {
   // Endpoints Constats
   static const String constats = '$baseUrl/constats';
   static const String constatsAll = '$baseUrl/constats/all';
+  static const String notifications = '$baseUrl/notifications';
 
   // Endpoints Services
   static const String servicesFactures = '$baseUrl/services/factures';
@@ -26,4 +34,7 @@ class ApiConstants {
 
   // Endpoints Avis
   static const String avisBase = '$baseUrl/avis';
+
+  // Endpoints Demandes d'assurance
+  static const String insuranceRequests = '$baseUrl/insurance-requests';
 }

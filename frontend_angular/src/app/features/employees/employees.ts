@@ -33,6 +33,7 @@ export class EmployeesComponent implements OnInit {
   showDeleteModal = false;
   userToDelete: Client | null = null;
   isDeleting = false;
+  actionMessage = '';
 
   // Add modal
   showAddModal = false;
@@ -239,6 +240,38 @@ export class EmployeesComponent implements OnInit {
         console.error('Error deleting user', err);
         this.isDeleting = false;
         this.closeDeleteModal();
+      }
+    });
+  }
+
+  toggleActive(emp: Client): void {
+    if (!emp.id) return;
+    this.actionMessage = '';
+    this.clientService.updateUserActive(emp.id, !emp.active).subscribe({
+      next: () => {
+        emp.active = !emp.active;
+        this.actionMessage = emp.active ? 'Compte activé.' : 'Compte désactivé.';
+        this.cdr.markForCheck();
+        setTimeout(() => { this.actionMessage = ''; this.cdr.markForCheck(); }, 3000);
+      },
+      error: (err: any) => {
+        this.actionMessage = err.error?.error || 'Action impossible.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  resetPassword(emp: Client): void {
+    if (!emp.id) return;
+    this.actionMessage = '';
+    this.clientService.resetUserPassword(emp.id).subscribe({
+      next: (res: any) => {
+        this.actionMessage = `Nouveau mot de passe temporaire: ${res.temporaryPassword}`;
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.actionMessage = err.error?.error || 'Réinitialisation impossible.';
+        this.cdr.markForCheck();
       }
     });
   }

@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS users (
     assurance_id VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'client',
     is_verified BOOLEAN DEFAULT FALSE,
+    active BOOLEAN DEFAULT TRUE,
+    last_login_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -82,7 +84,18 @@ CREATE TABLE IF NOT EXISTS constats (
     signature_b_path VARCHAR(255),
     photos_paths TEXT,
     statut VARCHAR(255) DEFAULT 'Non examiné',
+    priorite VARCHAR(50) DEFAULT 'Normale',
+    date_limite TIMESTAMP NULL,
+    note_interne TEXT,
+    documents_manquants TEXT,
+    motif_rejet TEXT,
+    commentaire_decision TEXT,
+    responsabilite_estimee VARCHAR(255),
+    montant_estime DOUBLE,
+    escalade BOOLEAN DEFAULT FALSE,
+    escalade_raison VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL,
     
     CONSTRAINT fk_user_constat FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -128,17 +141,38 @@ CREATE TABLE IF NOT EXISTS factures (
 -- ALTER TABLE constats ADD COLUMN IF NOT EXISTS statut VARCHAR(255) DEFAULT 'Non examiné';
 -- ALTER TABLE factures ADD COLUMN IF NOT EXISTS type_facture VARCHAR(255) DEFAULT 'Autre';
 
--- 6. Table DevisRequests
-CREATE TABLE IF NOT EXISTS devis_requests (
+CREATE TABLE IF NOT EXISTS constat_actions (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    assurance_type VARCHAR(255),
-    statut VARCHAR(255) DEFAULT 'En attente',
-    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user_devis FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    constat_id BIGINT NOT NULL,
+    actor_id BIGINT NULL,
+    actor_name VARCHAR(255),
+    action_type VARCHAR(255),
+    old_statut VARCHAR(255),
+    new_statut VARCHAR(255),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_action_constat FOREIGN KEY (constat_id) REFERENCES constats(id) ON DELETE CASCADE,
+    CONSTRAINT fk_action_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- 7. Table Assistance Numbers (24/7)
+CREATE TABLE IF NOT EXISTS insurance_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    price VARCHAR(255),
+    details_json TEXT,
+    status VARCHAR(255) NOT NULL DEFAULT 'EN_ATTENTE',
+    decision_comment TEXT,
+    processed_by_id BIGINT NULL,
+    processed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL,
+    CONSTRAINT fk_insurance_request_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_insurance_request_processed_by FOREIGN KEY (processed_by_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- 6. Table Assistance Numbers (24/7)
 CREATE TABLE IF NOT EXISTS emergency_numbers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     label VARCHAR(255),
@@ -146,7 +180,7 @@ CREATE TABLE IF NOT EXISTS emergency_numbers (
     icon_str VARCHAR(255)
 );
 
--- 8. Table Assistance Types 
+-- 7. Table Assistance Types
 CREATE TABLE IF NOT EXISTS assistance_types (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255),
@@ -154,7 +188,7 @@ CREATE TABLE IF NOT EXISTS assistance_types (
     icon_str VARCHAR(255)
 );
 
--- 9. Table Healthcare Professionals (Réseau de soins)
+-- 8. Table Healthcare Professionals (Réseau de soins)
 CREATE TABLE IF NOT EXISTS healthcare_professionals (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255),
@@ -167,7 +201,7 @@ CREATE TABLE IF NOT EXISTS healthcare_professionals (
     bio TEXT
 );
 
--- 10. Table Avis (Avis et évaluations dynamiques)
+-- 9. Table Avis (Avis et évaluations dynamiques)
 CREATE TABLE IF NOT EXISTS avis (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     rating DOUBLE NOT NULL,

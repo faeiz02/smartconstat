@@ -58,6 +58,7 @@ public class AuthService {
             admin.setPasswordHash(passwordEncoder.encode(adminPassword));
             admin.setRole("admin");
             admin.setVerified(true);
+            admin.setActive(true);
             userRepository.save(admin);
             
             System.out.println("==================================================");
@@ -85,6 +86,7 @@ public class AuthService {
             employe.setPasswordHash(passwordEncoder.encode(employePassword));
             employe.setRole("employe");
             employe.setVerified(true);
+            employe.setActive(true);
             userRepository.save(employe);
 
             System.out.println("==================================================");
@@ -119,6 +121,7 @@ public class AuthService {
             admin.setPasswordHash(passwordEncoder.encode(adminPassword));
             admin.setRole("admin");
             admin.setVerified(true);
+            admin.setActive(true);
             userRepository.save(admin);
             
             result.put("success", true);
@@ -274,12 +277,22 @@ public class AuthService {
                     .build();
         }
 
+        if (!user.isActive()) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("Compte desactive. Veuillez contacter l'administrateur.")
+                    .build();
+        }
+
         if (!user.isVerified()) {
             return AuthResponse.builder()
                     .success(false)
                     .message("not_verified") // Code spécial pour le frontend
                     .build();
         }
+
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getId());
 
@@ -316,6 +329,7 @@ public class AuthService {
                     .assuranceId(req.getAssuranceId())
                     .role("client")
                     .isVerified(true)
+                    .active(true)
                     .build();
 
             user = userRepository.save(user);
@@ -434,6 +448,7 @@ public class AuthService {
     // ─── Helper ───
     private Map<String, Object> userToMap(User user) {
         Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", user.getId());
         map.put("assurance_id", user.getAssuranceId());
         map.put("nom", user.getNom());
         map.put("prenom", user.getPrenom());
@@ -445,6 +460,10 @@ public class AuthService {
         map.put("vehicle_plate", user.getVehiclePlate() != null ? user.getVehiclePlate() : "");
         map.put("insurance_number", user.getAssuranceId());
         map.put("role", user.getRole() != null ? user.getRole() : "client");
+        map.put("isVerified", user.isVerified());
+        map.put("active", user.isActive());
+        map.put("lastLoginAt", user.getLastLoginAt() != null ? user.getLastLoginAt().toString() : "");
+        map.put("createdAt", user.getCreatedAt() != null ? user.getCreatedAt().toString() : "");
 
         if (user.getAssuranceId() != null) {
             assuranceRepository.findByAssuranceId(user.getAssuranceId()).ifPresent(assurance -> {

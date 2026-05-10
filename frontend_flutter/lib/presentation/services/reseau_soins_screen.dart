@@ -277,7 +277,7 @@ class _ReseauSoinsScreenState extends State<ReseauSoinsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(p["name"] ?? "", style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                      Text(p["type"] ?? "", style: TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
+                      Text(p["type"] ?? "", style: const TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
                       Text("${p["address"] ?? ""} • ${p["distanceStr"] ?? ""}", style: TextStyle(color: AppColors.mediumGrey.withOpacity(0.7), fontSize: 11)),
                     ],
                   ),

@@ -12,6 +12,33 @@ export interface Constat {
   userEmail?: string;
   traiteParNom?: string;
   traiteParId?: number;
+  priorite?: string;
+  dateLimite?: string;
+  noteInterne?: string;
+  documentsManquants?: string;
+  motifRejet?: string;
+  commentaireDecision?: string;
+  responsabiliteEstimee?: string;
+  montantEstime?: number;
+  factureStatut?: string;
+  montantFacturesTotal?: number;
+  nombreFactures?: number;
+  priseEnChargeDecision?: string;
+  factures?: Array<{
+    id?: number;
+    mois?: string;
+    montant?: number;
+    echeance?: string;
+    statut?: string;
+    typeFacture?: string;
+    photoUrl?: string;
+    decisionStatut?: string;
+    decisionCommentaire?: string;
+    decisionAt?: string;
+  }>;
+  escalade?: boolean;
+  escaladeRaison?: string;
+  updatedAt?: string;
   
   // Véhicule A
   nomA?: string;
@@ -56,7 +83,7 @@ export interface Constat {
 })
 export class ConstatService {
   // Using the local IP since this is a mobile environment test backend
-  private apiUrl = 'http://localhost:8082/api/constats';
+  private apiUrl = 'http://192.168.1.189:8082/api/constats';
 
   constructor(private http: HttpClient) { }
 
@@ -68,7 +95,27 @@ export class ConstatService {
     return this.http.get<Constat[]>(url);
   }
 
-  updateStatut(id: number, statut: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}/statut`, { statut });
+  updateStatut(id: number, statut: string, comment?: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/statut`, { statut, comment });
+  }
+
+  assignConstat(id: number, employeId: number, comment?: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/assign`, { employeId, comment });
+  }
+
+  updateTracking(id: number, payload: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}/tracking`, payload);
+  }
+
+  getHistory(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${id}/history`);
+  }
+
+  getAdminNotifications(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/admin/notifications`);
+  }
+
+  getEmployeePerformance(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/performance`);
   }
 }

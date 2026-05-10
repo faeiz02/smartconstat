@@ -21,7 +21,7 @@ class AppColors {
   static const Color purpleAssistance = Color(0xFF7C3AED);
   static const Color tealSoins        = Color(0xFF0D9488);
   static const Color brownFactures    = Color(0xFF92400E);
-  static const Color pinkDevis        = Color(0xFFDB2777);
+  static const Color pinkAccent       = Color(0xFFDB2777);
 
   // ─── Neutrals ───
   static const Color darkGrey   = Color(0xFF111827);

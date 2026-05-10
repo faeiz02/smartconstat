@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../data/models/constat_model.dart';
 import '../../../data/services/accident_service.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/user_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../widgets/smart_canvas_widget.dart';
 import 'fullscreen_canvas_screen.dart';
@@ -59,7 +60,7 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
   final _observationsController = TextEditingController();
 
   // Photos & choc
-  List<File> _photos = [];
+  final List<File> _photos = [];
   int? _selectedChocPosition;
   bool _degatsMateriels = false;
   bool _blesses = false;
@@ -366,7 +367,7 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
       ),
       child: Stack(
         children: [
-          Center(child: Icon(Icons.directions_car, size: 90, color: AppColors.lightGrey)),
+          const Center(child: Icon(Icons.directions_car, size: 90, color: AppColors.lightGrey)),
           Positioned(top: 20, left: 20, child: _buildChocPoint(1, "Avant G")),
           Positioned(top: 20, right: 20, child: _buildChocPoint(2, "Avant D")),
           Positioned(bottom: 20, left: 20, child: _buildChocPoint(3, "Arrière G")),
@@ -412,10 +413,10 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
         const SizedBox(height: 10),
         _buildField(_degatsBcontroller, "Dégâts véhicule B", "Décrivez les dégâts", null, maxLines: 2),
         const SizedBox(height: 16),
-        Row(children: [
-          const Icon(Icons.camera_alt_outlined, color: AppColors.secondaryBlue, size: 20),
-          const SizedBox(width: 8),
-          const Text("Photos de l'accident", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+        const Row(children: [
+          Icon(Icons.camera_alt_outlined, color: AppColors.secondaryBlue, size: 20),
+          SizedBox(width: 8),
+          Text("Photos de l'accident", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         ]),
         const SizedBox(height: 10),
         SizedBox(
@@ -514,17 +515,17 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
   Widget _buildCroquisSection() {
     return _buildSectionCard(
       children: [
-        Row(
+        const Row(
           children: [
-            const Icon(Icons.draw_outlined, color: AppColors.secondaryBlue, size: 20),
-            const SizedBox(width: 8),
-            const Expanded(
+            Icon(Icons.draw_outlined, color: AppColors.secondaryBlue, size: 20),
+            SizedBox(width: 8),
+            Expanded(
               child: Text("Dessinez le croquis de l'accident", style: TextStyle(fontWeight: FontWeight.w700)),
             ),
           ],
         ),
         const SizedBox(height: 6),
-        Text(
+        const Text(
           "Cliquez ci-dessous pour ouvrir l'éditeur de croquis en plein écran pour plus de précision.",
           style: TextStyle(color: AppColors.mediumGrey, fontSize: 12),
         ),
@@ -728,8 +729,24 @@ class _ConstatFormScreenState extends State<ConstatFormScreen> {
         ),
       );
 
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final assuranceId = authProvider.user?.assuranceId ?? "AT123456";
+      final authUser = context.read<AuthProvider>().user;
+      final providerUser = context.read<UserProvider>().user;
+      final currentUser = authUser ?? providerUser;
+
+      if (currentUser == null || currentUser.assuranceId.isEmpty) {
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Session invalide. Reconnectez-vous avant d'envoyer un constat."),
+              backgroundColor: AppColors.redDanger,
+            ),
+          );
+        }
+        return;
+      }
+
+      final assuranceId = currentUser.assuranceId;
 
       final result = await AccidentService.saveConstat(assuranceId, constat);
       

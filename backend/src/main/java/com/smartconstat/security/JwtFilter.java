@@ -37,7 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
             if (jwtUtil.validateToken(token)) {
                 Long userId = jwtUtil.getUserIdFromToken(token);
 
-                userRepository.findById(userId).ifPresent(user -> {
+                userRepository.findById(userId).filter(user -> user.isActive()).ifPresent(user -> {
                     String role = user.getRole() != null ? user.getRole() : "client";
                     UsernamePasswordAuthenticationToken auth =
                             new UsernamePasswordAuthenticationToken(

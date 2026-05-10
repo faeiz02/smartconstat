@@ -30,6 +30,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     await SecureStorageService.deleteToken();
+    await SecureStorageService.deleteUserId();
     _user = null;
     _isAuthenticated = false;
     notifyListeners();

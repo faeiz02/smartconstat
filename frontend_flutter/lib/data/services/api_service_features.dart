@@ -54,17 +54,20 @@ class ApiServiceFeatures {
     required double montant,
     required String echeance,
     required String typeFacture,
+    int? constatId,
   }) async {
     try {
+      final body = {
+        "mois": mois,
+        "montant": montant,
+        "echeance": echeance,
+        "typeFacture": typeFacture,
+        if (constatId != null) "constatId": constatId,
+      };
       final response = await http.post(
         Uri.parse(ApiConstants.servicesFactures),
         headers: await _headers(),
-        body: jsonEncode({
-          "mois": mois,
-          "montant": montant,
-          "echeance": echeance,
-          "typeFacture": typeFacture,
-        }),
+        body: jsonEncode(body),
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -74,6 +77,51 @@ class ApiServiceFeatures {
     } catch (e) {
       print("Erreur createFacture: $e");
       return -1;
+    }
+  }
+
+  static Future<List<dynamic>> getMyConstats() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.constats),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+      return [];
+    } catch (e) {
+      print("Erreur getMyConstats: $e");
+      return [];
+    }
+  }
+
+  static Future<List<dynamic>> getNotifications() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.notifications),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+      return [];
+    } catch (e) {
+      print("Erreur getNotifications: $e");
+      return [];
+    }
+  }
+
+  static Future<bool> markNotificationRead(int id) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConstants.notifications}/$id/read'),
+        headers: await _headers(),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print("Erreur markNotificationRead: $e");
+      return false;
     }
   }
 
@@ -247,6 +295,66 @@ class ApiServiceFeatures {
     } catch (e) {
       print("Erreur deleteAvis: $e");
       return false;
+    }
+  }
+
+  // ─── Demandes de nouvelle assurance ───
+  static Future<Map<String, dynamic>> submitInsuranceRequest({
+    required String type,
+    required String title,
+    required String price,
+    required Map<String, String> details,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConstants.insuranceRequests),
+        headers: await _headers(),
+        body: jsonEncode({
+          "type": type,
+          "title": title,
+          "price": price,
+          "details": details,
+        }),
+      );
+
+      final data = response.body.isNotEmpty
+          ? jsonDecode(response.body) as Map<String, dynamic>
+          : <String, dynamic>{};
+
+      if (response.statusCode == 200) {
+        return {
+          "success": data["success"] ?? true,
+          "message": data["message"] ?? "Demande envoyée",
+          "request": data["request"],
+        };
+      }
+
+      return {
+        "success": false,
+        "message": data["error"] ?? data["message"] ?? "Erreur serveur: ${response.statusCode}",
+      };
+    } catch (e) {
+      print("Erreur submitInsuranceRequest: $e");
+      return {
+        "success": false,
+        "message": "Erreur de connexion au serveur: $e",
+      };
+    }
+  }
+
+  static Future<List<dynamic>> getMyInsuranceRequests() async {
+    try {
+      final response = await http.get(
+        Uri.parse(ApiConstants.insuranceRequests),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+      return [];
+    } catch (e) {
+      print("Erreur getMyInsuranceRequests: $e");
+      return [];
     }
   }
 }

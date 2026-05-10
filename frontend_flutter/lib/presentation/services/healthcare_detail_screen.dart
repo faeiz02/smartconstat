@@ -56,7 +56,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
   Future<void> _fetchAvis() async {
     // Get current user ID from secure storage
     _currentUserId = await SecureStorageService.getUserId();
-    
+
     final id = widget.professional['id'];
     if (id != null) {
       final rawId = id is int ? id : int.tryParse(id.toString()) ?? 0;
@@ -67,14 +67,18 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
           _isLoadingReviews = false;
           _currentReviewCount = _avisList.length;
           if (_avisList.isNotEmpty) {
-            double avg = _avisList.map((a) => a.rating).reduce((a, b) => a + b) / _avisList.length;
+            double avg =
+                _avisList.map((a) => a.rating).reduce((a, b) => a + b) /
+                    _avisList.length;
             _currentRating = (avg * 10).round() / 10.0;
           }
           // Sort: user's own review first, then by date
           if (_currentUserId != null) {
             _avisList.sort((a, b) {
-              if (a.userId == _currentUserId && b.userId != _currentUserId) return -1;
-              if (b.userId == _currentUserId && a.userId != _currentUserId) return 1;
+              if (a.userId == _currentUserId && b.userId != _currentUserId)
+                return -1;
+              if (b.userId == _currentUserId && a.userId != _currentUserId)
+                return 1;
               // For same ownership status, keep original order (newest first)
               return 0;
             });
@@ -98,16 +102,15 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
       if (permission == LocationPermission.deniedForever) return;
       final position = await Geolocator.getCurrentPosition();
       if (mounted) {
-        setState(
-            () => _userLocation = LatLng(position.latitude, position.longitude));
+        setState(() =>
+            _userLocation = LatLng(position.latitude, position.longitude));
       }
     } catch (e) {
       debugPrint("Error fetching location: $e");
     }
   }
 
-  String _getCategory() =>
-      widget.professional["type"] ?? "Spécialité inconnue";
+  String _getCategory() => widget.professional["type"] ?? "Spécialité inconnue";
   String _getName() => widget.professional["name"] ?? "Nom inconnu";
   String _getAddress() =>
       widget.professional["address"] ?? "Adresse non spécifiée";
@@ -165,8 +168,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
         elevation: 6,
         icon: const Icon(Icons.phone, color: Colors.white),
         label: const Text("Appeler",
-            style:
-                TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       ),
     );
   }
@@ -196,8 +198,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
               color: Colors.black.withOpacity(0.3),
               shape: BoxShape.circle,
             ),
-            child:
-                const Icon(Icons.fullscreen, color: Colors.white, size: 20),
+            child: const Icon(Icons.fullscreen, color: Colors.white, size: 20),
           ),
           onPressed: () => _showFullScreenMap(context),
         ),
@@ -210,13 +211,12 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
               options: MapOptions(
                 initialCenter: _doctorLocation,
                 initialZoom: 14.0,
-                interactionOptions: const InteractionOptions(
-                    flags: InteractiveFlag.none),
+                interactionOptions:
+                    const InteractionOptions(flags: InteractiveFlag.none),
               ),
               children: [
                 TileLayer(
-                  urlTemplate:
-                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.smartconstat.app',
                 ),
                 MarkerLayer(
@@ -245,8 +245,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                           decoration: BoxDecoration(
                             color: AppColors.secondaryBlue,
                             shape: BoxShape.circle,
-                            border:
-                                Border.all(color: Colors.white, width: 3),
+                            border: Border.all(color: Colors.white, width: 3),
                           ),
                           child: const Icon(Icons.person,
                               color: Colors.white, size: 20),
@@ -396,7 +395,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                 const SizedBox(height: 4),
                 Text(
                   "$_currentReviewCount avis vérifiés",
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: AppColors.mediumGrey,
                       fontSize: 13,
                       fontWeight: FontWeight.w500),
@@ -406,8 +405,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
           ),
           // Distance badge
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: AppColors.tealSoins.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
@@ -435,8 +433,8 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
   Widget _buildQuickActions() {
     return Row(
       children: [
-        _actionButton(Icons.phone_rounded, "Appeler", AppColors.tealSoins,
-            _launchPhone),
+        _actionButton(
+            Icons.phone_rounded, "Appeler", AppColors.tealSoins, _launchPhone),
         const SizedBox(width: 10),
         _actionButton(Icons.map_rounded, "Carte", AppColors.secondaryBlue,
             () => _showFullScreenMap(context)),
@@ -465,9 +463,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
               const SizedBox(height: 6),
               Text(label,
                   style: TextStyle(
-                      color: color,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700)),
+                      color: color, fontSize: 12, fontWeight: FontWeight.w700)),
             ],
           ),
         ),
@@ -505,16 +501,13 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
               ),
               const SizedBox(width: 10),
               const Text("À propos",
-                  style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 12),
           Text(_getBio(),
-              style: TextStyle(
-                  height: 1.6,
-                  color: AppColors.mediumGrey,
-                  fontSize: 13.5)),
+              style: const TextStyle(
+                  height: 1.6, color: AppColors.mediumGrey, fontSize: 13.5)),
         ],
       ),
     );
@@ -550,8 +543,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
               ),
               const SizedBox(width: 10),
               const Text("Localisation & Contact",
-                  style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 14),
@@ -559,8 +551,8 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
           const Divider(height: 24),
           GestureDetector(
             onTap: _launchPhone,
-            child: _contactTile(Icons.phone_outlined, _getPhone(),
-                isLink: true),
+            child:
+                _contactTile(Icons.phone_outlined, _getPhone(), isLink: true),
           ),
         ],
       ),
@@ -570,18 +562,18 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
   Widget _contactTile(IconData icon, String text, {bool isLink = false}) {
     return Row(
       children: [
-        Icon(icon, color: isLink ? AppColors.tealSoins : AppColors.mediumGrey, size: 18),
+        Icon(icon,
+            color: isLink ? AppColors.tealSoins : AppColors.mediumGrey,
+            size: 18),
         const SizedBox(width: 12),
         Expanded(
           child: Text(text,
               style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w500,
-                  color:
-                      isLink ? AppColors.tealSoins : AppColors.darkGrey,
-                  decoration: isLink
-                      ? TextDecoration.underline
-                      : TextDecoration.none)),
+                  color: isLink ? AppColors.tealSoins : AppColors.darkGrey,
+                  decoration:
+                      isLink ? TextDecoration.underline : TextDecoration.none)),
         ),
       ],
     );
@@ -600,14 +592,13 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                 color: Colors.amber.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.star_rounded,
-                  color: Colors.amber, size: 18),
+              child:
+                  const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
             ),
             const SizedBox(width: 10),
             const Expanded(
               child: Text("Avis & Évaluations",
-                  style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             ),
             GestureDetector(
               onTap: () => _showAddReviewModal(context),
@@ -640,8 +631,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
           const Center(
               child: Padding(
             padding: EdgeInsets.all(24),
-            child:
-                CircularProgressIndicator(color: AppColors.tealSoins),
+            child: CircularProgressIndicator(color: AppColors.tealSoins),
           ))
         else if (_avisList.isEmpty)
           Container(
@@ -683,7 +673,8 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.tealSoins.withOpacity(0.3)),
+                  border:
+                      Border.all(color: AppColors.tealSoins.withOpacity(0.3)),
                 ),
                 child: Center(
                   child: Text(
@@ -748,7 +739,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
       AppColors.tealSoins,
       AppColors.secondaryBlue,
       AppColors.purpleAssistance,
-      AppColors.pinkDevis,
+      AppColors.pinkAccent,
       AppColors.orangeWarning,
     ];
     final bgColor = colors[initial.codeUnitAt(0) % colors.length];
@@ -795,8 +786,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
               ),
               // Stars
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.amber.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -821,10 +811,8 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
           if (avis.comment.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(avis.comment,
-                style: TextStyle(
-                    color: AppColors.mediumGrey,
-                    fontSize: 13,
-                    height: 1.5)),
+                style: const TextStyle(
+                    color: AppColors.mediumGrey, fontSize: 13, height: 1.5)),
           ],
           // Edit/Delete buttons for own review
           if (_currentUserId != null && avis.userId == _currentUserId) ...[
@@ -835,7 +823,8 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                 GestureDetector(
                   onTap: () => _showEditReviewModal(context, avis),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.secondaryBlue.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -843,9 +832,14 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.edit_rounded, size: 14, color: AppColors.secondaryBlue),
+                        Icon(Icons.edit_rounded,
+                            size: 14, color: AppColors.secondaryBlue),
                         SizedBox(width: 4),
-                        Text("Modifier", style: TextStyle(color: AppColors.secondaryBlue, fontSize: 12, fontWeight: FontWeight.w600)),
+                        Text("Modifier",
+                            style: TextStyle(
+                                color: AppColors.secondaryBlue,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -854,7 +848,8 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                 GestureDetector(
                   onTap: () => _confirmDeleteAvis(context, avis),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.redDanger.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -862,9 +857,14 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.delete_outline_rounded, size: 14, color: AppColors.redDanger),
+                        Icon(Icons.delete_outline_rounded,
+                            size: 14, color: AppColors.redDanger),
                         SizedBox(width: 4),
-                        Text("Supprimer", style: TextStyle(color: AppColors.redDanger, fontSize: 12, fontWeight: FontWeight.w600)),
+                        Text("Supprimer",
+                            style: TextStyle(
+                                color: AppColors.redDanger,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -898,8 +898,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
           ),
           children: [
             TileLayer(
-              urlTemplate:
-                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.smartconstat.app',
             ),
             MarkerLayer(
@@ -920,8 +919,7 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                       decoration: BoxDecoration(
                         color: AppColors.secondaryBlue,
                         shape: BoxShape.circle,
-                        border:
-                            Border.all(color: Colors.white, width: 3),
+                        border: Border.all(color: Colors.white, width: 3),
                       ),
                       child: const Icon(Icons.person,
                           color: Colors.white, size: 20),
@@ -938,11 +936,14 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
   // ─── ADD REVIEW MODAL ───
   void _showAddReviewModal(BuildContext context) {
     // Check if user already has a review
-    final existingReview = _avisList.where((a) => _currentUserId != null && a.userId == _currentUserId).toList();
+    final existingReview = _avisList
+        .where((a) => _currentUserId != null && a.userId == _currentUserId)
+        .toList();
     if (existingReview.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text("Vous avez déjà laissé un avis. Vous pouvez le modifier ou le supprimer."),
+            content: Text(
+                "Vous avez déjà laissé un avis. Vous pouvez le modifier ou le supprimer."),
             backgroundColor: AppColors.orangeWarning),
       );
       return;
@@ -988,11 +989,13 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text("Supprimer l'avis"),
-        content: const Text("Êtes-vous sûr de vouloir supprimer votre avis ? Cette action est irréversible."),
+        content: const Text(
+            "Êtes-vous sûr de vouloir supprimer votre avis ? Cette action est irréversible."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Annuler", style: TextStyle(color: AppColors.mediumGrey)),
+            child: const Text("Annuler",
+                style: TextStyle(color: AppColors.mediumGrey)),
           ),
           TextButton(
             onPressed: () async {
@@ -1002,15 +1005,21 @@ class _HealthcareDetailScreenState extends State<HealthcareDetailScreen>
                 setState(() => _isLoadingReviews = true);
                 _fetchAvis();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Avis supprimé."), backgroundColor: AppColors.greenSuccess),
+                  const SnackBar(
+                      content: Text("Avis supprimé."),
+                      backgroundColor: AppColors.greenSuccess),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Erreur lors de la suppression."), backgroundColor: AppColors.redDanger),
+                  const SnackBar(
+                      content: Text("Erreur lors de la suppression."),
+                      backgroundColor: AppColors.redDanger),
                 );
               }
             },
-            child: const Text("Supprimer", style: TextStyle(color: AppColors.redDanger, fontWeight: FontWeight.w700)),
+            child: const Text("Supprimer",
+                style: TextStyle(
+                    color: AppColors.redDanger, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -1026,8 +1035,7 @@ class _AddReviewSheet extends StatefulWidget {
   final String professionalName;
 
   const _AddReviewSheet(
-      {Key? key, required this.professionalId, required this.professionalName})
-      : super(key: key);
+      {required this.professionalId, required this.professionalName});
 
   @override
   State<_AddReviewSheet> createState() => _AddReviewSheetState();
@@ -1095,14 +1103,14 @@ class _AddReviewSheetState extends State<_AddReviewSheet> {
     } else if (statusCode == 409) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text("Vous avez déjà laissé un avis pour ce professionnel."),
+            content:
+                Text("Vous avez déjà laissé un avis pour ce professionnel."),
             backgroundColor: AppColors.orangeWarning),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text(
-                "Erreur lors de l'ajout. Vérifiez votre connexion."),
+            content: Text("Erreur lors de l'ajout. Vérifiez votre connexion."),
             backgroundColor: AppColors.redDanger),
       );
     }
@@ -1136,13 +1144,12 @@ class _AddReviewSheetState extends State<_AddReviewSheet> {
           const SizedBox(height: 20),
           Text("Évaluer ${widget.professionalName}",
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w800)),
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
-          Text("Partagez votre expérience avec les autres patients",
+          const Text("Partagez votre expérience avec les autres patients",
               textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.mediumGrey, fontSize: 13)),
+              style: TextStyle(color: AppColors.mediumGrey, fontSize: 13)),
           const SizedBox(height: 24),
 
           // Stars
@@ -1185,7 +1192,8 @@ class _AddReviewSheetState extends State<_AddReviewSheet> {
             maxLines: 4,
             decoration: InputDecoration(
               hintText: "Écrivez votre commentaire ici...",
-              hintStyle: TextStyle(color: AppColors.mediumGrey.withOpacity(0.5)),
+              hintStyle:
+                  TextStyle(color: AppColors.mediumGrey.withOpacity(0.5)),
               filled: true,
               fillColor: AppColors.scaffold,
               border: OutlineInputBorder(
@@ -1238,9 +1246,7 @@ class _EditReviewSheet extends StatefulWidget {
   final Avis avis;
   final String professionalName;
 
-  const _EditReviewSheet(
-      {Key? key, required this.avis, required this.professionalName})
-      : super(key: key);
+  const _EditReviewSheet({required this.avis, required this.professionalName});
 
   @override
   State<_EditReviewSheet> createState() => _EditReviewSheetState();
@@ -1333,15 +1339,14 @@ class _EditReviewSheetState extends State<_EditReviewSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          Text("Modifier votre avis",
+          const Text("Modifier votre avis",
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w800)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
-          Text("${widget.professionalName}",
+          Text(widget.professionalName,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.mediumGrey, fontSize: 13)),
+              style:
+                  const TextStyle(color: AppColors.mediumGrey, fontSize: 13)),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1389,8 +1394,8 @@ class _EditReviewSheetState extends State<_EditReviewSheet> {
                   borderSide: BorderSide.none),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(
-                      color: AppColors.tealSoins, width: 1.5)),
+                  borderSide:
+                      const BorderSide(color: AppColors.tealSoins, width: 1.5)),
             ),
           ),
           const SizedBox(height: 20),

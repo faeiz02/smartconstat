@@ -1,252 +1,409 @@
-<!-- Constat Detail Content -->
-    <button class="back-btn" routerLink="/dashboard">
-      <span class="material-icons">arrow_back</span>
-      Retour au Dashboard
-    </button>
+<button class="back-btn" routerLink="/dashboard">
+  <span class="material-icons">arrow_back</span>
+  Retour au Dashboard
+</button>
 
-    <div class="loading-state" *ngIf="isLoading">
-      <div class="spinner"></div>
-      <p>Chargement du constat...</p>
+<div class="loading-state" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Chargement du constat...</p>
+</div>
+
+<div class="error-state" *ngIf="!isLoading && !constat">
+  <span class="material-icons">error_outline</span>
+  <h2>Constat introuvable</h2>
+  <p>Le constat que vous recherchez n'existe pas ou a été supprimé.</p>
+  <button class="back-link" routerLink="/dashboard">Retour au dashboard</button>
+</div>
+
+<div class="content" *ngIf="!isLoading && constat">
+  <div class="title-section">
+    <div>
+      <h1>Constat #{{ constat.accidentId || constat.id || '?' }}</h1>
+      <p class="subtitle">{{ formatDate(constat.dateTime) }}</p>
+    </div>
+    <div class="title-badges">
+      <div class="priority-chip" [ngClass]="getPriorityClass(constat.priorite)">
+        <span class="material-icons">flag</span>
+        {{ constat.priorite || 'Normale' }}
+      </div>
+      <div class="status-chip" [ngClass]="getStatutClass(constat.statut)">
+        <span class="material-icons">{{ getStatutIcon(constat.statut) }}</span>
+        {{ constat.statut || 'Non examiné' }}
+      </div>
+    </div>
+  </div>
+
+  <div class="assigned-banner" *ngIf="constat.traiteParNom">
+    <span class="material-icons">engineering</span>
+    <span>Pris en charge par : <strong>{{ constat.traiteParNom }}</strong></span>
+  </div>
+
+  <div class="success-toast" *ngIf="successMessage">
+    <span class="material-icons">check_circle</span>
+    {{ successMessage }}
+  </div>
+
+  <div class="error-toast" *ngIf="errorMessage">
+    <span class="material-icons">warning</span>
+    {{ errorMessage }}
+  </div>
+
+  <div class="actions-panel">
+    <div class="panel-title">
+      <span class="material-icons">account_tree</span>
+      <h3>Workflow du dossier</h3>
+    </div>
+    <div class="workflow-comment">
+      <label>Commentaire de statut</label>
+      <textarea [(ngModel)]="statusComment" rows="2" placeholder="Motif de rejet, demande de documents, note d'expertise..."></textarea>
+    </div>
+    <div class="action-buttons">
+      <button
+        class="btn-action"
+        *ngFor="let status of workflowStatuses"
+        [ngClass]="status.className"
+        [class.active]="constat.statut === status.value"
+        [disabled]="isUpdating || !canUpdateStatus(status.value)"
+        (click)="updateStatut(status.value)">
+        <span class="material-icons">{{ status.icon }}</span>
+        {{ status.label }}
+      </button>
+      <button
+        class="btn-action btn-secondary"
+        *ngIf="canReset()"
+        [disabled]="isUpdating"
+        (click)="updateStatut('Non examiné')">
+        <span class="material-icons">restart_alt</span>
+        Réouvrir
+      </button>
+      <div class="spinner small" *ngIf="isUpdating"></div>
+    </div>
+  </div>
+
+  <div class="details-grid management-grid">
+    <div class="section-card" *ngIf="isAdmin()">
+      <div class="section-header admin-section">
+        <span class="material-icons">assignment_ind</span>
+        <h2>Affectation</h2>
+      </div>
+      <div class="section-body">
+        <div class="form-group">
+          <label>Employé responsable</label>
+          <select [(ngModel)]="selectedEmployeeId">
+            <option [ngValue]="null">Non affecté</option>
+            <option *ngFor="let emp of employees" [ngValue]="emp.id">{{ emp.nom }} {{ emp.prenom }} - {{ emp.role }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Commentaire d'affectation</label>
+          <textarea [(ngModel)]="assignmentComment" rows="3"></textarea>
+        </div>
+        <button class="save-btn" (click)="assignConstat()" [disabled]="isAssigning || !selectedEmployeeId">
+          <span class="material-icons" *ngIf="!isAssigning">save</span>
+          <div class="spinner small" *ngIf="isAssigning"></div>
+          Affecter
+        </button>
+      </div>
     </div>
 
-    <div class="error-state" *ngIf="!isLoading && !constat">
-      <span class="material-icons">error_outline</span>
-      <h2>Constat introuvable</h2>
-      <p>Le constat que vous recherchez n'existe pas ou a été supprimé.</p>
-      <button class="back-link" routerLink="/dashboard">Retour au dashboard</button>
+    <div class="section-card">
+      <div class="section-header tracking-section">
+        <span class="material-icons">fact_check</span>
+        <h2>Suivi de traitement</h2>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Priorité</label>
+            <select [(ngModel)]="tracking.priorite">
+              <option value="Basse">Basse</option>
+              <option value="Normale">Normale</option>
+              <option value="Haute">Haute</option>
+              <option value="Urgente">Urgente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date limite</label>
+            <input type="datetime-local" [(ngModel)]="tracking.dateLimite" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Documents manquants</label>
+          <textarea [(ngModel)]="tracking.documentsManquants" rows="3" placeholder="Photo, signature, CIN, carte grise, rapport police..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Note interne</label>
+          <textarea [(ngModel)]="tracking.noteInterne" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Responsabilité estimée</label>
+            <select [(ngModel)]="tracking.responsabiliteEstimee">
+              <option value="">Non définie</option>
+              <option value="A">Conducteur A</option>
+              <option value="B">Conducteur B</option>
+              <option value="Partagée">Partagée</option>
+              <option value="Indéterminée">Indéterminée</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Montant estimatif</label>
+            <input type="number" min="0" step="0.01" [(ngModel)]="tracking.montantEstime" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Commentaire décision finale</label>
+          <textarea [(ngModel)]="tracking.commentaireDecision" rows="3"></textarea>
+        </div>
+        <label class="toggle-row">
+          <input type="checkbox" [(ngModel)]="tracking.escalade" />
+          <span>Escalader vers admin / expert</span>
+        </label>
+        <div class="form-group" *ngIf="tracking.escalade">
+          <label>Raison d'escalade</label>
+          <textarea [(ngModel)]="tracking.escaladeRaison" rows="2"></textarea>
+        </div>
+        <button class="save-btn" (click)="saveTracking()" [disabled]="isSavingTracking || !canSaveTracking()">
+          <span class="material-icons" *ngIf="!isSavingTracking">save</span>
+          <div class="spinner small" *ngIf="isSavingTracking"></div>
+          Enregistrer le suivi
+        </button>
+      </div>
     </div>
 
-    <div class="content" *ngIf="!isLoading && constat">
-      <!-- Header -->
-      <div class="title-section">
-        <div>
-          <h1>Constat #{{ constat.accidentId || constat.id || '?' }}</h1>
-          <p class="subtitle">{{ formatDate(constat.dateTime) }}</p>
-        </div>
-        <div class="status-chip" [ngClass]="getStatutClass(constat.statut)">
-          <span class="material-icons">{{ getStatutIcon(constat.statut) }}</span>
-          {{ constat.statut || 'Non examiné' }}
-        </div>
+    <div class="section-card">
+      <div class="section-header checklist-section">
+        <span class="material-icons">checklist</span>
+        <h2>Checklist</h2>
       </div>
-
-      <!-- Assigné à -->
-      <div class="assigned-banner" *ngIf="constat.traiteParNom">
-        <span class="material-icons">person</span>
-        <span>Traité par : <strong>{{ constat.traiteParNom }}</strong></span>
-      </div>
-
-      <!-- Success Toast -->
-      <div class="success-toast" *ngIf="successMessage">
-        <span class="material-icons">check_circle</span>
-        {{ successMessage }}
-      </div>
-
-      <!-- Error Toast -->
-      <div class="error-toast" *ngIf="errorMessage">
-        <span class="material-icons">warning</span>
-        {{ errorMessage }}
-      </div>
-
-      <!-- Actions Panel -->
-      <div class="actions-panel">
-        <h3>Actions</h3>
-        <p class="actions-hint">Cliquez sur un bouton pour changer le statut. Une fois "Examiner" cliqué, ce constat vous sera assigné et ne sera plus visible par les autres employés.</p>
-        <div class="action-buttons">
-          <button 
-            class="btn-action btn-info" 
-            [class.active]="constat.statut === 'En cours d\'exécution'"
-            [disabled]="isUpdating"
-            (click)="updateStatut('En cours d\'exécution')">
-            <span class="material-icons">hourglass_top</span>
-            Examiner
-          </button>
-          <button 
-            class="btn-action btn-success" 
-            [class.active]="constat.statut === 'Traité'"
-            [disabled]="isUpdating"
-            (click)="updateStatut('Traité')">
-            <span class="material-icons">check_circle</span>
-            Traiter
-          </button>
-          <button 
-            class="btn-action btn-danger" 
-            [class.active]="constat.statut === 'Rejeté'"
-            [disabled]="isUpdating"
-            (click)="updateStatut('Rejeté')">
-            <span class="material-icons">cancel</span>
-            Rejeter
-          </button>
-          <div class="spinner small" *ngIf="isUpdating"></div>
-        </div>
-      </div>
-
-      <!-- Details Grid -->
-      <div class="details-grid">
-        <!-- Info Générales -->
-        <div class="section-card">
-          <div class="section-header">
-            <span class="material-icons">info</span>
-            <h2>Informations Générales</h2>
-          </div>
-          <div class="section-body">
-            <div class="info-item">
-              <span class="info-label">Lieu</span>
-              <span class="info-value">{{ constat.lieu || 'N/A' }}</span>
-            </div>
-            <div class="info-item" *ngIf="constat.userName">
-              <span class="info-label">Soumis par</span>
-              <span class="info-value">{{ constat.userName }}</span>
-            </div>
-            <div class="info-item" *ngIf="constat.userEmail">
-              <span class="info-label">Email</span>
-              <span class="info-value">{{ constat.userEmail }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Blessés</span>
-              <span class="info-value" [class.text-danger]="constat.blesses">{{ constat.blesses ? 'Oui' : 'Non' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Intervention Police</span>
-              <span class="info-value">{{ constat.interventionPolice ? 'Oui' : 'Non' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Véhicule A -->
-        <div class="section-card">
-          <div class="section-header vehicle-a">
-            <span class="material-icons">directions_car</span>
-            <h2>Véhicule A</h2>
-          </div>
-          <div class="section-body">
-            <div class="info-item">
-              <span class="info-label">Conducteur</span>
-              <span class="info-value">{{ constat.nomA }} {{ constat.prenomA }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Immatriculation</span>
-              <span class="info-value plate-value">{{ constat.immatriculationA || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Assureur</span>
-              <span class="info-value">{{ constat.assureurA || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">N° Contrat</span>
-              <span class="info-value">{{ constat.contratA || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Véhicule</span>
-              <span class="info-value">{{ constat.vehiculeMarqueA || '' }} {{ constat.vehiculeModeleA || '' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Adresse</span>
-              <span class="info-value">{{ constat.adresseA || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Dégâts apparents</span>
-              <span class="info-value">{{ constat.degatsApparentsA || 'N/A' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Véhicule B -->
-        <div class="section-card">
-          <div class="section-header vehicle-b">
-            <span class="material-icons">directions_car</span>
-            <h2>Véhicule B</h2>
-          </div>
-          <div class="section-body">
-            <div class="info-item">
-              <span class="info-label">Conducteur</span>
-              <span class="info-value">{{ constat.nomB }} {{ constat.prenomB }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Immatriculation</span>
-              <span class="info-value plate-value">{{ constat.immatriculationB || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Assureur</span>
-              <span class="info-value">{{ constat.assureurB || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">N° Contrat</span>
-              <span class="info-value">{{ constat.contratB || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Véhicule</span>
-              <span class="info-value">{{ constat.vehiculeMarqueB || '' }} {{ constat.vehiculeModeleB || '' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Adresse</span>
-              <span class="info-value">{{ constat.adresseB || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Dégâts apparents</span>
-              <span class="info-value">{{ constat.degatsApparentsB || 'N/A' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Circonstances -->
-        <div class="section-card">
-          <div class="section-header">
-            <span class="material-icons">notes</span>
-            <h2>Circonstances & Observations</h2>
-          </div>
-          <div class="section-body">
-            <div class="info-item" *ngIf="constat.circonstances && constat.circonstances.length > 0">
-              <span class="info-label">Circonstances</span>
-              <span class="info-value">{{ constat.circonstances.join(', ') }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Observations</span>
-              <span class="info-value">{{ constat.observations || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Témoins</span>
-              <span class="info-value">{{ constat.temoins || 'Aucun' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Point de choc initial</span>
-              <span class="info-value">{{ constat.pointChocInitial || 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Autres dégâts</span>
-              <span class="info-value">{{ constat.autresDegats || 'N/A' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pièces jointes -->
-        <div class="section-card" *ngIf="constat.croquisPath || constat.signatureAPath || constat.signatureBPath || constat.photosPaths">
-          <div class="section-header files-header">
-            <span class="material-icons">attach_file</span>
-            <h2>Pièces Jointes</h2>
-          </div>
-          <div class="section-body">
-            <div class="files-grid">
-              <div class="file-item" *ngIf="constat.croquisPath">
-                <span class="file-label">Croquis</span>
-                <img [src]="'http://localhost:8082/' + constat.croquisPath" alt="Croquis" class="file-img" />
-              </div>
-              <div class="file-item" *ngIf="constat.signatureAPath">
-                <span class="file-label">Signature A</span>
-                <img [src]="'http://localhost:8082/' + constat.signatureAPath" alt="Signature A" class="file-img" />
-              </div>
-              <div class="file-item" *ngIf="constat.signatureBPath">
-                <span class="file-label">Signature B</span>
-                <img [src]="'http://localhost:8082/' + constat.signatureBPath" alt="Signature B" class="file-img" />
-              </div>
-            </div>
-            <div class="photos-section" *ngIf="constat.photosPaths">
-              <span class="file-label">Photos de l'accident</span>
-              <div class="photos-grid">
-                <img *ngFor="let photo of constat.photosPaths.split(',')" [src]="'http://localhost:8082/' + photo.trim()" alt="Photo accident" class="file-img photo-img" />
-              </div>
-            </div>
-          </div>
+      <div class="section-body checklist">
+        <div class="check-item" *ngFor="let item of getChecklist()" [class.ok]="item.ok">
+          <span class="material-icons">{{ item.ok ? 'check_circle' : 'radio_button_unchecked' }}</span>
+          <span>{{ item.label }}</span>
         </div>
       </div>
     </div>
 
+    <div class="section-card">
+      <div class="section-header files-header">
+        <span class="material-icons">payments</span>
+        <h2>Dossier factures</h2>
+      </div>
+      <div class="section-body">
+        <div class="info-item">
+          <span class="info-label">Etat facture</span>
+          <span class="info-value">{{ constat.factureStatut || 'Non demandee' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Total factures</span>
+          <span class="info-value">{{ constat.montantFacturesTotal || 0 }} TND</span>
+        </div>
+        <div class="info-item" *ngIf="constat.priseEnChargeDecision">
+          <span class="info-label">Decision</span>
+          <span class="info-value">{{ constat.priseEnChargeDecision }}</span>
+        </div>
+        <div class="checklist" *ngIf="constat.factures && constat.factures.length > 0; else noFactures">
+          <div class="check-item ok" *ngFor="let facture of constat.factures">
+            <span class="material-icons">receipt_long</span>
+            <span>#{{ facture.id }} - {{ facture.typeFacture || 'Facture' }} - {{ facture.montant || 0 }} TND - {{ facture.statut || 'En attente' }}</span>
+          </div>
+        </div>
+        <ng-template #noFactures>
+          <p class="empty-inline">Aucune facture fournie pour ce dossier.</p>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header history-section">
+        <span class="material-icons">history</span>
+        <h2>Historique</h2>
+      </div>
+      <div class="section-body">
+        <div class="history-list" *ngIf="history.length > 0; else noHistory">
+          <div class="history-item" *ngFor="let action of history">
+            <div class="timeline-dot"></div>
+            <div>
+              <div class="history-title">{{ formatAction(action.actionType) }} - {{ action.actorName || 'Système' }}</div>
+              <div class="history-meta">{{ formatDate(action.createdAt) }}</div>
+              <div class="history-change" *ngIf="action.oldStatut || action.newStatut">
+                {{ action.oldStatut || '—' }} → {{ action.newStatut || '—' }}
+              </div>
+              <div class="history-comment" *ngIf="action.comment">{{ action.comment }}</div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noHistory>
+          <p class="empty-inline">Aucune action enregistrée.</p>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+
+  <div class="details-grid">
+    <div class="section-card">
+      <div class="section-header">
+        <span class="material-icons">info</span>
+        <h2>Informations générales</h2>
+      </div>
+      <div class="section-body">
+        <div class="info-item">
+          <span class="info-label">Lieu</span>
+          <span class="info-value">{{ constat.lieu || 'N/A' }}</span>
+        </div>
+        <div class="info-item" *ngIf="constat.userName">
+          <span class="info-label">Soumis par</span>
+          <span class="info-value">{{ constat.userName }}</span>
+        </div>
+        <div class="info-item" *ngIf="constat.userEmail">
+          <span class="info-label">Email</span>
+          <span class="info-value">{{ constat.userEmail }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Blessés</span>
+          <span class="info-value" [class.text-danger]="constat.blesses">{{ constat.blesses ? 'Oui' : 'Non' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Intervention Police</span>
+          <span class="info-value">{{ constat.interventionPolice ? 'Oui' : 'Non' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Échéance</span>
+          <span class="info-value">{{ formatDate(constat.dateLimite) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header vehicle-a">
+        <span class="material-icons">directions_car</span>
+        <h2>Véhicule A</h2>
+      </div>
+      <div class="section-body">
+        <div class="info-item">
+          <span class="info-label">Conducteur</span>
+          <span class="info-value">{{ constat.nomA }} {{ constat.prenomA }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Immatriculation</span>
+          <span class="info-value plate-value">{{ constat.immatriculationA || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Assureur</span>
+          <span class="info-value">{{ constat.assureurA || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">N° Contrat</span>
+          <span class="info-value">{{ constat.contratA || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Véhicule</span>
+          <span class="info-value">{{ constat.vehiculeMarqueA || '' }} {{ constat.vehiculeModeleA || '' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Adresse</span>
+          <span class="info-value">{{ constat.adresseA || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Dégâts apparents</span>
+          <span class="info-value">{{ constat.degatsApparentsA || 'N/A' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header vehicle-b">
+        <span class="material-icons">directions_car</span>
+        <h2>Véhicule B</h2>
+      </div>
+      <div class="section-body">
+        <div class="info-item">
+          <span class="info-label">Conducteur</span>
+          <span class="info-value">{{ constat.nomB }} {{ constat.prenomB }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Immatriculation</span>
+          <span class="info-value plate-value">{{ constat.immatriculationB || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Assureur</span>
+          <span class="info-value">{{ constat.assureurB || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">N° Contrat</span>
+          <span class="info-value">{{ constat.contratB || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Véhicule</span>
+          <span class="info-value">{{ constat.vehiculeMarqueB || '' }} {{ constat.vehiculeModeleB || '' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Adresse</span>
+          <span class="info-value">{{ constat.adresseB || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Dégâts apparents</span>
+          <span class="info-value">{{ constat.degatsApparentsB || 'N/A' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <span class="material-icons">notes</span>
+        <h2>Circonstances & observations</h2>
+      </div>
+      <div class="section-body">
+        <div class="info-item" *ngIf="constat.circonstances && constat.circonstances.length > 0">
+          <span class="info-label">Circonstances</span>
+          <span class="info-value">{{ constat.circonstances.join(', ') }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Observations</span>
+          <span class="info-value">{{ constat.observations || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Témoins</span>
+          <span class="info-value">{{ constat.temoins || 'Aucun' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Point de choc initial</span>
+          <span class="info-value">{{ constat.pointChocInitial || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Autres dégâts</span>
+          <span class="info-value">{{ constat.autresDegats || 'N/A' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card wide-card" *ngIf="constat.croquisPath || constat.signatureAPath || constat.signatureBPath || constat.photosPaths">
+      <div class="section-header files-header">
+        <span class="material-icons">attach_file</span>
+        <h2>Pièces jointes</h2>
+      </div>
+      <div class="section-body">
+        <div class="files-grid">
+          <div class="file-item" *ngIf="constat.croquisPath">
+            <span class="file-label">Croquis</span>
+            <img [src]="'http://192.168.1.189:8082/' + constat.croquisPath" alt="Croquis" class="file-img" />
+          </div>
+          <div class="file-item" *ngIf="constat.signatureAPath">
+            <span class="file-label">Signature A</span>
+            <img [src]="'http://192.168.1.189:8082/' + constat.signatureAPath" alt="Signature A" class="file-img" />
+          </div>
+          <div class="file-item" *ngIf="constat.signatureBPath">
+            <span class="file-label">Signature B</span>
+            <img [src]="'http://192.168.1.189:8082/' + constat.signatureBPath" alt="Signature B" class="file-img" />
+          </div>
+        </div>
+        <div class="photos-section" *ngIf="constat.photosPaths">
+          <span class="file-label">Photos de l'accident</span>
+          <div class="photos-grid">
+            <img *ngFor="let photo of constat.photosPaths.split(',')" [src]="'http://192.168.1.189:8082/' + photo.trim()" alt="Photo accident" class="file-img photo-img" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

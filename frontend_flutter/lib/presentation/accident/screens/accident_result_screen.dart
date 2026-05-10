@@ -105,7 +105,7 @@ class AccidentResultScreen extends StatelessWidget {
             child: Icon(icon, size: 18, color: AppColors.secondaryBlue),
           ),
           const SizedBox(width: 14),
-          SizedBox(width: 80, child: Text(label, style: TextStyle(color: AppColors.mediumGrey, fontSize: 13))),
+          SizedBox(width: 80, child: Text(label, style: const TextStyle(color: AppColors.mediumGrey, fontSize: 13))),
           Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
         ],
       ),
@@ -130,14 +130,14 @@ class AccidentResultScreen extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: LinearGradient(colors: [AppColors.orangeWarning.withOpacity(0.12), AppColors.orangeWarning.withOpacity(0.04)]),
             ),
-            child: Center(
+            child: const Center(
               child: Text("50%", style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: AppColors.orangeWarning)),
             ),
           ),
           const SizedBox(height: 14),
           Text(
             accident.responsabilite,
-            style: TextStyle(fontSize: 14, color: AppColors.orangeWarning, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 14, color: AppColors.orangeWarning, fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
         ],
@@ -239,7 +239,7 @@ class AccidentResultScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  Text(sub, style: TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
+                  Text(sub, style: const TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
                 ],
               ),
             ),

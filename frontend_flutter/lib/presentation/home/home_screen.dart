@@ -3,11 +3,11 @@ import '../../data/models/user_model.dart';
 import '../../data/models/constat_model.dart';
 import '../../data/models/accident_model.dart'; // Conservé pour compatibilité avec AccidentResultScreen
 import '../../data/services/accident_service.dart';
+import '../../data/services/api_service_features.dart';
 import '../constat/screens/constat_form_screen.dart';
 import '../accident/screens/accident_result_screen.dart';
 import '../constat/screens/my_constats_screen.dart';
 import '../profile/profile_screen.dart';
-import '../services/assistance_voyage_screen.dart';
 import '../services/reseau_soins_screen.dart';
 import '../services/assistance_247_screen.dart';
 import '../services/factures_screen.dart';
@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<ConstatModel> _constats = [];
   bool _isLoadingConstats = true;
+  List<dynamic> _notifications = [];
 
   @override
   void initState() {
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _dateFin = widget.user.dateExpiration ?? DateTime.now().add(const Duration(days: 365));
     _dateDebut = DateTime(_dateFin.year - 1, _dateFin.month, _dateFin.day);
     _loadConstats();
+    _loadNotifications();
   }
 
   Future<void> _loadConstats() async {
@@ -49,6 +51,18 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoadingConstats = false;
       });
     }
+  }
+
+  Future<void> _loadNotifications() async {
+    final notifications = await ApiServiceFeatures.getNotifications();
+    if (mounted) {
+      setState(() => _notifications = notifications);
+    }
+  }
+
+  int get _unreadNotificationsCount {
+    final unread = _notifications.where((n) => n['read'] != true).length;
+    return unread + (_isInsuranceExpiringSoon() ? 1 : 0);
   }
 
   bool _isInsuranceExpiringSoon() {
@@ -91,13 +105,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             actions: [
-              if (_isInsuranceExpiringSoon())
-                Stack(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined),
-                      onPressed: () => _showExpirationDialog(context),
-                    ),
+              Stack(
+                children: [
+                  IconButton(
+                    icon: Icon(_unreadNotificationsCount > 0 ? Icons.notifications_outlined : Icons.notifications_none_rounded),
+                    onPressed: () => _showNotificationsDialog(context),
+                  ),
+                  if (_unreadNotificationsCount > 0)
                     Positioned(
                       right: 10,
                       top: 10,
@@ -108,18 +122,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: Text(
-                          '${DateFormatter.getDaysLeft(_dateFin)}',
+                          '$_unreadNotificationsCount',
                           style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
-                  ],
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded),
-                  onPressed: () => _showMessage(context, "Aucune notification", AppColors.mediumGrey),
-                ),
+                ],
+              ),
               GestureDetector(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(user: widget.user))),
                 child: Container(
@@ -190,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ? FloatingActionButton.extended(
               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddInsuranceScreen())),
               icon: const Icon(Icons.add_rounded),
-              label: const Text("Ajouter", style: TextStyle(fontWeight: FontWeight.w700)),
+              label: const Text("Demander", style: TextStyle(fontWeight: FontWeight.w700)),
               backgroundColor: AppColors.greenSuccess,
               foregroundColor: Colors.white,
               elevation: 4,
@@ -349,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Début", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
+                    const Text("Début", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
                     const SizedBox(height: 3),
                     Text(DateFormatter.formatDate(_dateDebut), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                   ],
@@ -359,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text("Échéance", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
+                    const Text("Échéance", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
                     const SizedBox(height: 3),
                     Text(
                       DateFormatter.formatDate(_dateFin),
@@ -383,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           Text(
             "${(progress * 100).toStringAsFixed(0)}% écoulé",
-            style: TextStyle(color: AppColors.mediumGrey, fontSize: 11),
+            style: const TextStyle(color: AppColors.mediumGrey, fontSize: 11),
           ),
         ],
       ),
@@ -441,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (status.toLowerCase().contains("traité") || status.toLowerCase().contains("validé")) {
               statusColor = AppColors.greenSuccess;
               statusBg = AppColors.greenSuccess.withOpacity(0.1);
-            } else if (status.toLowerCase().contains("refusé")) {
+            } else if (status.toLowerCase().contains("refusé") || status.toLowerCase().contains("rejet")) {
               statusColor = AppColors.redDanger;
               statusBg = AppColors.redDanger.withOpacity(0.1);
             } else {
@@ -502,14 +511,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 4),
                           Text(
                             constat.lieu ?? "Lieu non spécifié",
-                            style: TextStyle(color: AppColors.mediumGrey, fontSize: 12),
+                            style: const TextStyle(color: AppColors.mediumGrey, fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             "Tiers: ${constat.immatriculationB ?? 'N/A'}",
-                            style: TextStyle(color: AppColors.darkGrey, fontSize: 11, fontWeight: FontWeight.w500),
+                            style: const TextStyle(color: AppColors.darkGrey, fontSize: 11, fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -653,7 +662,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                    Text(type, style: TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
+                    Text(type, style: const TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
                   ],
                 ),
               ),
@@ -677,14 +686,14 @@ class _HomeScreenState extends State<HomeScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("N° contrat", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
+                  const Text("N° contrat", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
                   Text(numero, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text("Échéance", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
+                  const Text("Échéance", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
                   Text(DateFormatter.formatDate(dateFin), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                 ],
               ),
@@ -700,7 +709,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<Map<String, dynamic>> services = [
       {"icon": Icons.history_rounded, "title": "Mes Constats", "color": AppColors.primaryBlue, "screen": MyConstatsScreen(user: widget.user)},
       {"icon": Icons.description_outlined, "title": "Constat", "color": AppColors.secondaryBlue, "screen": const ConstatFormScreen()},
-      {"icon": Icons.flight_takeoff_rounded, "title": "Assist. Voyage", "color": AppColors.orangeWarning, "screen": const AssistanceVoyageScreen()},
       {"icon": Icons.local_hospital_outlined, "title": "Réseau soins", "color": AppColors.tealSoins, "screen": const ReseauSoinsScreen()},
       {"icon": Icons.support_agent_rounded, "title": "Assistance 24/7", "color": AppColors.purpleAssistance, "screen": const Assistance247Screen()},
       {"icon": Icons.receipt_long_outlined, "title": "Mes factures", "color": AppColors.brownFactures, "screen": const FacturesScreen()},
@@ -865,7 +873,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              Text(subtitle, style: TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
+              Text(subtitle, style: const TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
             ],
           ),
         ),
@@ -924,6 +932,68 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==================== DIALOGUES ====================
+  void _showNotificationsDialog(BuildContext context) {
+    final items = <Map<String, dynamic>>[
+      if (_isInsuranceExpiringSoon())
+        {
+          "title": "Assurance bientot expiree",
+          "message": "Votre assurance expire dans ${DateFormatter.getDaysLeft(_dateFin)} jours.",
+          "icon": Icons.warning_amber_rounded,
+          "color": AppColors.orangeWarning,
+        },
+      ..._notifications.map((n) => {
+            "id": n["id"],
+            "title": n["title"] ?? "Notification",
+            "message": n["message"] ?? "",
+            "icon": Icons.notifications_active_outlined,
+            "color": n["read"] == true ? AppColors.mediumGrey : AppColors.secondaryBlue,
+          }),
+    ];
+
+    if (items.isEmpty) {
+      _showMessage(context, "Aucune notification", AppColors.mediumGrey);
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Notifications", style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 12),
+              ...items.map((item) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      backgroundColor: (item["color"] as Color).withOpacity(0.12),
+                      child: Icon(item["icon"] as IconData, color: item["color"] as Color),
+                    ),
+                    title: Text(item["title"].toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    subtitle: Text(item["message"].toString()),
+                    onTap: () => Navigator.pop(ctx),
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    for (final notification in _notifications) {
+      final id = notification["id"];
+      if (id is num && notification["read"] != true) {
+        ApiServiceFeatures.markNotificationRead(id.toInt());
+      }
+    }
+    setState(() {
+      _notifications = _notifications.map((n) => {...Map<String, dynamic>.from(n as Map), "read": true}).toList();
+    });
+  }
+
   void _showExpirationDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -1022,7 +1092,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                Text(subtitle, style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
+                Text(subtitle, style: const TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
               ],
             ),
           ),

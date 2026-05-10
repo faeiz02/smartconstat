@@ -27,7 +27,7 @@ export interface LoginResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8082/api/auth';
+  private apiUrl = 'http://192.168.1.189:8082/api/auth';
   private tokenKey = 'admin_jwt_token';
   private userKey = 'admin_user';
   

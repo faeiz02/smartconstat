@@ -47,6 +47,10 @@
   <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="Rechercher par nom, email, CIN, téléphone..." />
 </div>
 
+<div class="modal-message success" *ngIf="actionMessage">
+  <span class="material-icons">info</span> {{ actionMessage }}
+</div>
+
 <!-- Loading -->
 <div class="loading-state" *ngIf="isLoading">
   <div class="spinner"></div>
@@ -73,6 +77,7 @@
         <th>CIN</th>
         <th>Rôle</th>
         <th>Statut</th>
+        <th>Activité</th>
         <th>Création</th>
         <th>Actions</th>
       </tr>
@@ -100,14 +105,25 @@
         <td>
           <span class="status-badge" [ngClass]="emp.isVerified ? 'verified' : 'unverified'">
             <span class="material-icons">{{ emp.isVerified ? 'check_circle' : 'pending' }}</span>
-            {{ emp.isVerified ? 'Vérifié' : 'En attente' }}
+            {{ emp.active === false ? 'Désactivé' : (emp.isVerified ? 'Vérifié' : 'En attente') }}
           </span>
+        </td>
+        <td>
+          <div class="secondary">Assignés: {{ emp.assignedConstats || 0 }}</div>
+          <div class="secondary">Traités: {{ emp.treatedConstats || 0 }} | Rejetés: {{ emp.rejectedConstats || 0 }}</div>
+          <div class="secondary">Dernier login: {{ formatDate(emp.lastLoginAt) }}</div>
         </td>
         <td class="date-cell">{{ formatDate(emp.createdAt) }}</td>
         <td>
           <div class="action-cell">
             <button class="icon-btn edit-btn" (click)="openRoleModal(emp)" title="Changer le rôle">
               <span class="material-icons">edit</span>
+            </button>
+            <button class="icon-btn edit-btn" (click)="resetPassword(emp)" title="Réinitialiser le mot de passe">
+              <span class="material-icons">key</span>
+            </button>
+            <button class="icon-btn edit-btn" (click)="toggleActive(emp)" [title]="emp.active === false ? 'Activer' : 'Désactiver'">
+              <span class="material-icons">{{ emp.active === false ? 'toggle_off' : 'toggle_on' }}</span>
             </button>
             <button class="icon-btn delete-btn" (click)="openDeleteModal(emp)" title="Supprimer">
               <span class="material-icons">delete</span>

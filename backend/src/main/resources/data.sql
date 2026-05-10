@@ -28,3 +28,10 @@ INSERT IGNORE INTO healthcare_professionals (name, type, address, distance_str, 
 ('Dr. Leila Mansour', 'Dentiste', 'Lafayette, Tunis', '1.8 km', '71 333 444', 4.9, 89, 'Chirurgien-dentiste spécialisée en esthétique dentaire et implantologie.');
 
 -- removed teleconsultation
+
+-- ─── Utilisateur de test et Constat ───
+INSERT IGNORE INTO users (id, email, password_hash, nom, prenom, role, active, created_at, assurance_id) VALUES
+(3, 'faeiz.kammoun1@gmail.com', '$2a$10$wE9O.q3r/X5v0/rE/6R.u.LhN9AXY8wQO5uG5O9B/g1qE9O.q3r/X', 'Kammoun', 'Faeiz', 'client', 1, NOW(), 'ASS001');
+
+INSERT IGNORE INTO constats (id, user_id, lieu, date_time, statut, priorite, assureura, contrata, noma, prenoma, vehicule_marquea, vehicule_modelea, immatriculationa, assureurb, nomb, prenomb, vehicule_marqueb, immatriculationb, created_at) VALUES
+(1, 3, 'Tunis, Centre Ville', '2026-05-09 14:30:00', 'Non examiné', 'Normale', 'AXA', 'CTR-1234', 'Kammoun', 'Faeiz', 'Renault', 'Clio', '1234-TU-56', 'Allianz', 'Ben Salah', 'Ahmed', 'Peugeot', '7890-TU-12', NOW());

@@ -10,6 +10,7 @@ export interface Client {
   cin?: string;
   phone?: string;
   role?: string;
+  active?: boolean;
   assuranceId?: string;
   vehicleBrand?: string;
   vehicleModel?: string;
@@ -17,7 +18,11 @@ export interface Client {
   compagnie?: string;
   dateExpiration?: string;
   isVerified?: boolean;
+  lastLoginAt?: string;
   createdAt?: string;
+  assignedConstats?: number;
+  treatedConstats?: number;
+  rejectedConstats?: number;
 }
 
 export interface Facture {
@@ -28,6 +33,14 @@ export interface Facture {
   statut?: string;
   typeFacture?: string;
   photoUrl?: string;
+  constatId?: number;
+  dossierStatut?: string;
+  factureStatut?: string;
+  montantFacturesTotal?: number;
+  priseEnChargeDecision?: string;
+  decisionStatut?: string;
+  decisionCommentaire?: string;
+  decisionAt?: string;
   userId?: number;
   userName?: string;
   userEmail?: string;
@@ -87,7 +100,7 @@ export interface AvisAdmin {
   providedIn: 'root'
 })
 export class ClientService {
-  private apiUrl = 'http://localhost:8082/api';
+  private apiUrl = 'http://192.168.1.189:8082/api';
 
   constructor(private http: HttpClient) { }
 
@@ -102,6 +115,14 @@ export class ClientService {
 
   deleteUser(userId: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/users/${userId}`);
+  }
+
+  updateUserActive(userId: number, active: boolean): Observable<any> {
+    return this.http.put(`${this.apiUrl}/users/${userId}/active`, { active });
+  }
+
+  resetUserPassword(userId: number, password?: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/users/${userId}/reset-password`, password ? { password } : {});
   }
 
   createUser(userData: any): Observable<any> {
@@ -193,4 +214,3 @@ export class ClientService {
     return this.http.delete(`${this.apiUrl}/avis/admin/${id}`);
   }
 }
-

@@ -1,6 +1,6 @@
 <div class="page-header">
   <div>
-    <h1>Factures & Devis</h1>
+    <h1>Factures</h1>
     <p class="subtitle">{{ factures.length }} factures au total — {{ formatMontant(getTotalMontant()) }}</p>
   </div>
   <button class="refresh-btn" (click)="loadFactures()">
@@ -78,6 +78,7 @@
       <tr>
         <th>ID</th>
         <th>Client</th>
+        <th>Dossier</th>
         <th>Type</th>
         <th>Mois</th>
         <th>Montant</th>
@@ -96,6 +97,10 @@
           </div>
         </td>
         <td>
+          <span class="id-badge" *ngIf="facture.constatId; else noDossier">#{{ facture.constatId }}</span>
+          <ng-template #noDossier>—</ng-template>
+        </td>
+        <td>
           <span class="type-badge">
             <span class="material-icons">{{ getTypeIcon(facture.typeFacture) }}</span>
             {{ facture.typeFacture || 'Autre' }}
@@ -108,6 +113,7 @@
           <span class="status-badge" [ngClass]="getStatutClass(facture.statut)">
             {{ facture.statut || 'N/A' }}
           </span>
+          <div class="assurance-id" *ngIf="facture.priseEnChargeDecision">{{ facture.priseEnChargeDecision }}</div>
         </td>
         <td>
           <button class="icon-btn delete-btn" (click)="openDeleteModal(facture)" title="Supprimer">

@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { ConstatService, Constat } from '../../core/services/constat';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
@@ -8,7 +9,7 @@ import { ThemeService } from '../../core/services/theme.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
@@ -17,15 +18,21 @@ export class DashboardComponent implements OnInit {
   filteredConstats: Constat[] = [];
   isLoading = true;
   activeTab: string | null = null;
+  searchQuery = '';
   userName = '';
   userRole = '';
+  notifications: any = null;
+  performance: any[] = [];
 
   tabs = [
     { label: 'Tous', statut: null, icon: 'list_alt' },
     { label: 'Non examinés', statut: 'Non examiné', icon: 'pending' },
     { label: 'En cours', statut: "En cours d'exécution", icon: 'hourglass_top' },
+    { label: 'Docs manquants', statut: 'Documents manquants', icon: 'folder_off' },
+    { label: 'Expertise', statut: 'En expertise', icon: 'manage_search' },
     { label: 'Traités', statut: 'Traité', icon: 'check_circle' },
-    { label: 'Rejetés', statut: 'Rejeté', icon: 'cancel' }
+    { label: 'Rejetés', statut: 'Rejeté', icon: 'cancel' },
+    { label: 'Archivés', statut: 'Archivé', icon: 'inventory_2' }
   ];
 
   constructor(
@@ -45,11 +52,10 @@ export class DashboardComponent implements OnInit {
     this.userName = user ? `${user.nom || ''} ${user.prenom || ''}`.trim() : 'Admin';
     this.userRole = this.authService.getUserRole();
     this.loadConstats();
+    if (this.isAdmin()) this.loadAdminInsights();
   }
 
-  isAdmin(): boolean {
-    return this.userRole === 'admin';
-  }
+  isAdmin(): boolean { return this.userRole === 'admin'; }
 
   logout(): void {
     this.authService.logout();
@@ -77,22 +83,48 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  loadAdminInsights(): void {
+    this.constatService.getAdminNotifications().subscribe({
+      next: data => { this.notifications = data; this.cdr.markForCheck(); },
+      error: () => {}
+    });
+    this.constatService.getEmployeePerformance().subscribe({
+      next: data => { this.performance = data; this.cdr.markForCheck(); },
+      error: () => {}
+    });
+  }
+
   filterConstats(statut: string | null): void {
     this.activeTab = statut;
-    if (!statut) {
-      this.filteredConstats = [...this.constats];
-    } else {
-      this.filteredConstats = this.constats.filter(c => c.statut === statut);
+    let result = !statut ? [...this.constats] : this.constats.filter(c => c.statut === statut);
+    const q = this.searchQuery.toLowerCase().trim();
+    if (q) {
+      result = result.filter(c =>
+        (c.lieu || '').toLowerCase().includes(q) ||
+        (c.userName || '').toLowerCase().includes(q) ||
+        (c.userEmail || '').toLowerCase().includes(q) ||
+        (c.immatriculationA || '').toLowerCase().includes(q) ||
+        (c.immatriculationB || '').toLowerCase().includes(q) ||
+        (c.assureurA || '').toLowerCase().includes(q) ||
+        (c.assureurB || '').toLowerCase().includes(q) ||
+        (c.statut || '').toLowerCase().includes(q)
+      );
     }
+    this.filteredConstats = result;
   }
+
+  onSearch(): void { this.filterConstats(this.activeTab); }
 
   countByStatut(statut: string): number {
     return this.constats.filter(c => c.statut === statut).length;
   }
 
   getMyAssignedCount(): number {
-    const user = this.authService.getUser();
-    return this.constats.filter(c => c.statut === "En cours d'exécution").length;
+    return this.constats.filter(c =>
+      c.statut === "En cours d'exécution" ||
+      c.statut === 'Documents manquants' ||
+      c.statut === 'En expertise'
+    ).length;
   }
 
   getMyTreatedCount(): number {
@@ -103,6 +135,8 @@ export class DashboardComponent implements OnInit {
     switch (statut) {
       case 'Non examiné': return 'status-warning';
       case "En cours d'exécution": return 'status-info';
+      case 'Documents manquants': return 'status-warning';
+      case 'En expertise': return 'status-info';
       case 'Traité': return 'status-success';
       case 'Rejeté': return 'status-danger';
       default: return 'status-default';
@@ -113,8 +147,11 @@ export class DashboardComponent implements OnInit {
     switch (statut) {
       case 'Non examiné': return 'pending_actions';
       case "En cours d'exécution": return 'hourglass_top';
+      case 'Documents manquants': return 'folder_off';
+      case 'En expertise': return 'manage_search';
       case 'Traité': return 'check_circle';
       case 'Rejeté': return 'cancel';
+      case 'Archivé': return 'inventory_2';
       default: return 'help_outline';
     }
   }
@@ -142,18 +179,17 @@ export class DashboardComponent implements OnInit {
     return `Il y a ${diffD} jours`;
   }
 
-  // ─── Statistics ───
   getAcceptanceRate(): string {
     const treated = this.constats.filter(c => c.statut === 'Traité').length;
     const total = this.constats.filter(c => c.statut === 'Traité' || c.statut === 'Rejeté').length;
-    if (total === 0) return '—';
+    if (total === 0) return '-';
     return Math.round((treated / total) * 100) + '%';
   }
 
   getRejectionRate(): string {
     const rejected = this.constats.filter(c => c.statut === 'Rejeté').length;
     const total = this.constats.filter(c => c.statut === 'Traité' || c.statut === 'Rejeté').length;
-    if (total === 0) return '—';
+    if (total === 0) return '-';
     return Math.round((rejected / total) * 100) + '%';
   }
 
@@ -162,14 +198,24 @@ export class DashboardComponent implements OnInit {
     return Math.round((this.countByStatut(statut) / this.constats.length) * 100);
   }
 
-  // ─── Export CSV ───
+  isOverdue(constat: Constat): boolean {
+    if (!constat.dateLimite) return false;
+    return new Date(constat.dateLimite) < new Date() && !['Traité', 'Rejeté', 'Archivé'].includes(constat.statut || '');
+  }
+
+  hasMissingPieces(constat: Constat): boolean {
+    return !constat.croquisPath || !constat.signatureAPath || !constat.signatureBPath || !constat.photosPaths;
+  }
+
   exportCSV(): void {
-    const headers = ['ID', 'Date', 'Lieu', 'Statut', 'Conducteur A', 'Immat A', 'Conducteur B', 'Immat B', 'Soumis par', 'Traité par'];
+    const headers = ['ID', 'Date', 'Lieu', 'Statut', 'Priorité', 'Date limite', 'Conducteur A', 'Immat A', 'Conducteur B', 'Immat B', 'Soumis par', 'Traité par'];
     const rows = this.constats.map(c => [
       c.accidentId || c.id,
       c.dateTime,
       c.lieu,
       c.statut,
+      c.priorite,
+      c.dateLimite,
       `${c.nomA || ''} ${c.prenomA || ''}`.trim(),
       c.immatriculationA,
       `${c.nomB || ''} ${c.prenomB || ''}`.trim(),
@@ -185,4 +231,3 @@ export class DashboardComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 }
-

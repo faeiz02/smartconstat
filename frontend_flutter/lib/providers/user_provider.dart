@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import '../data/models/user_model.dart';
 import '../data/services/auth_service.dart';
 import '../core/storage/secure_storage_service.dart';
@@ -26,30 +27,37 @@ class UserProvider extends ChangeNotifier {
 
   String get initials {
     final n = _user?.nom.isNotEmpty == true ? _user!.nom[0].toUpperCase() : '';
-    final p = _user?.prenom.isNotEmpty == true ? _user!.prenom[0].toUpperCase() : '';
+    final p =
+        _user?.prenom.isNotEmpty == true ? _user!.prenom[0].toUpperCase() : '';
     return '$n$p';
+  }
+
+  void _notifyListenersSafely() {
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return;
+    }
+
+    notifyListeners();
   }
 
   // ─── Définir l'utilisateur après login/register ───
   void setUser(UserModel user) {
     _user = user;
     _error = null;
-    notifyListeners();
+    _notifyListenersSafely();
   }
 
   // ─── Restauration automatique de session ───
   /// Vérifie si un token JWT est stocké et charge le profil.
   /// Retourne true si la session a été restaurée avec succès.
   Future<bool> tryAutoLogin() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
       final token = await SecureStorageService.getToken();
       if (token == null) {
-        _isLoading = false;
-        notifyListeners();
         return false;
       }
 
@@ -57,21 +65,17 @@ class UserProvider extends ChangeNotifier {
 
       if (response['success'] == true && response['user'] != null) {
         _user = UserModel.fromJson(response['user']);
-        _isLoading = false;
-        notifyListeners();
+        // Only notify if we found a user to prevent unnecessary rebuilds
+        _notifyListenersSafely();
         return true;
       } else {
         // Token expiré ou invalide
         await SecureStorageService.deleteToken();
         await SecureStorageService.deleteUserId();
-        _isLoading = false;
-        notifyListeners();
         return false;
       }
     } catch (e) {
       _error = 'Erreur de restauration de session: $e';
-      _isLoading = false;
-      notifyListeners();
       return false;
     }
   }
@@ -80,7 +84,7 @@ class UserProvider extends ChangeNotifier {
   Future<void> refreshProfile() async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    _notifyListenersSafely();
 
     try {
       final response = await AuthService.getUserProfile();
@@ -95,14 +99,14 @@ class UserProvider extends ChangeNotifier {
     }
 
     _isLoading = false;
-    notifyListeners();
+    _notifyListenersSafely();
   }
 
   // ─── Mettre à jour le profil ───
   Future<bool> updateProfile({String? phone, String? email}) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    _notifyListenersSafely();
 
     try {
       final updates = <String, String>{};
@@ -114,7 +118,7 @@ class UserProvider extends ChangeNotifier {
       if (response.containsKey('error')) {
         _error = response['error'];
         _isLoading = false;
-        notifyListeners();
+        _notifyListenersSafely();
         return false;
       }
 
@@ -124,7 +128,7 @@ class UserProvider extends ChangeNotifier {
     } catch (e) {
       _error = 'Erreur: $e';
       _isLoading = false;
-      notifyListeners();
+      _notifyListenersSafely();
       return false;
     }
   }
@@ -135,6 +139,6 @@ class UserProvider extends ChangeNotifier {
     _error = null;
     await SecureStorageService.deleteToken();
     await SecureStorageService.deleteUserId();
-    notifyListeners();
+    _notifyListenersSafely();
   }
 }

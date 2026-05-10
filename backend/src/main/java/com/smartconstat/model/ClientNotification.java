@@ -1,16 +1,15 @@
 package com.smartconstat.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "factures")
+@Table(name = "client_notifications")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Facture {
+public class ClientNotification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,21 +20,25 @@ public class Facture {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "constat_id")
     private Constat constat;
 
-    private String mois;
-    private Double montant;
-    private LocalDate echeance;
-    private String statut; // "Payée", "À payer"
-    private String typeFacture; // "Maladie", "Réparation", "Visite technique", "Autre"
-    private String photoUrl;
-    private String decisionStatut;
+    private String title;
 
-    @Column(length = 1000)
-    private String decisionCommentaire;
+    @Column(length = 2000)
+    private String message;
 
-    private LocalDateTime decisionAt;
+    private String type;
+
+    @Builder.Default
+    private boolean readFlag = false;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

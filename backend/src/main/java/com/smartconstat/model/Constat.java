@@ -24,6 +24,9 @@ public class Constat {
     @Builder.Default
     private String statut = "Non examiné";
 
+    @Builder.Default
+    private String priorite = "Normale"; // "Basse", "Normale", "Haute", "Urgente"
+
     // Véhicule A
     private String assureurA;
     private String contratA;
@@ -51,31 +54,34 @@ public class Constat {
     // Dégâts
     private String pointChocInitial;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String degatsApparentsA;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String degatsApparentsB;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String autresDegats;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String circonstances; // stored as comma-separated
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String observations;
 
     private String temoins;
+    @Builder.Default
     private boolean blesses = false;
+    @Builder.Default
     private boolean degatsMaterielsAutres = false;
+    @Builder.Default
     private boolean interventionPolice = false;
 
     private String croquisPath;
     private String signatureAPath;
     private String signatureBPath;
     
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String photosPaths;
 
     // Employé qui traite ce constat
@@ -85,6 +91,37 @@ public class Constat {
 
     private String traiteParNom;
 
+    private LocalDateTime dateLimite;
+
+    @Column(columnDefinition = "TEXT")
+    private String noteInterne;
+
+    @Column(columnDefinition = "TEXT")
+    private String documentsManquants;
+
+    @Column(columnDefinition = "TEXT")
+    private String motifRejet;
+
+    @Column(columnDefinition = "TEXT")
+    private String commentaireDecision;
+
+    private String responsabiliteEstimee;
+    private Double montantEstime;
+    @Builder.Default
+    private boolean escalade = false;
+    private String escaladeRaison;
+    @Builder.Default
+    private String factureStatut = "Non demandee";
+    @Builder.Default
+    private Double montantFacturesTotal = 0.0;
+    @Builder.Default
+    private Integer nombreFactures = 0;
+
+    @Column(columnDefinition = "TEXT")
+    private String priseEnChargeDecision;
+
+    private LocalDateTime updatedAt;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
@@ -92,5 +129,16 @@ public class Constat {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         if (statut == null) statut = "Non examiné";
+        if (priorite == null) priorite = "Normale";
+        if (factureStatut == null) factureStatut = "Non demandee";
+        if (montantFacturesTotal == null) montantFacturesTotal = 0.0;
+        if (nombreFactures == null) nombreFactures = 0;
+        if (dateLimite == null) dateLimite = createdAt.plusDays(3);
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

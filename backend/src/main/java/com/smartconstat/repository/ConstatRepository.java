@@ -8,9 +8,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ConstatRepository extends JpaRepository<Constat, Long> {
-    List<Constat> findByUserOrderByCreatedAtDesc(User user);
+    List<Constat> findByUserIdOrderByCreatedAtDesc(Long userId);
     List<Constat> findAllByOrderByCreatedAtDesc();
     List<Constat> findByStatutOrderByCreatedAtDesc(String statut);
+    long countByTraitePar(User user);
+    long countByTraiteParAndStatut(User user, String statut);
 
     // Constats visibles par un employé :
     // - Tous les "Non examiné" (disponibles)

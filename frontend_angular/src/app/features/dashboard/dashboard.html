@@ -1,10 +1,8 @@
-<!-- ════════ ADMIN DASHBOARD ════════ -->
 <ng-container *ngIf="isAdmin()">
-  <!-- Welcome Header -->
   <div class="welcome-header admin-header">
     <div class="header-content">
       <div class="header-text">
-        <h1>Bonjour, {{ userName }} 👋</h1>
+        <h1>Bonjour, {{ userName }}</h1>
         <p class="subtitle">{{ constats.length }} constats au total</p>
       </div>
       <div class="header-actions">
@@ -16,50 +14,44 @@
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="stats-row">
-    <div class="stat-card" (click)="filterConstats(null)" [class.active]="activeTab === null">
-      <div class="stat-icon default"><span class="material-icons">list_alt</span></div>
+  <div class="stats-row" *ngIf="notifications">
+    <div class="stat-card">
+      <div class="stat-icon danger"><span class="material-icons">priority_high</span></div>
       <div class="stat-info">
-        <div class="stat-value">{{ constats.length }}</div>
-        <div class="stat-label">Total</div>
+        <div class="stat-value">{{ notifications.urgentConstats || 0 }}</div>
+        <div class="stat-label">Urgents</div>
       </div>
     </div>
-    
-    <div class="stat-card" (click)="filterConstats('Non examiné')" [class.active]="activeTab === 'Non examiné'">
-      <div class="stat-icon warning"><span class="material-icons">pending_actions</span></div>
+    <div class="stat-card">
+      <div class="stat-icon warning"><span class="material-icons">block</span></div>
       <div class="stat-info">
-        <div class="stat-value">{{ countByStatut('Non examiné') }}</div>
-        <div class="stat-label">Non examinés</div>
+        <div class="stat-value">{{ notifications.blockedConstats || 0 }}</div>
+        <div class="stat-label">Bloqués</div>
       </div>
     </div>
-
-    <div class="stat-card" (click)="filterConstats('En cours d\'exécution')" [class.active]="activeTab === 'En cours d\'exécution'">
-      <div class="stat-icon info"><span class="material-icons">hourglass_top</span></div>
+    <div class="stat-card">
+      <div class="stat-icon info"><span class="material-icons">event_busy</span></div>
       <div class="stat-info">
-        <div class="stat-value">{{ countByStatut('En cours d\'exécution') }}</div>
-        <div class="stat-label">En cours</div>
+        <div class="stat-value">{{ notifications.overdueConstats || 0 }}</div>
+        <div class="stat-label">En retard</div>
       </div>
     </div>
-
-    <div class="stat-card" (click)="filterConstats('Traité')" [class.active]="activeTab === 'Traité'">
-      <div class="stat-icon success"><span class="material-icons">check_circle</span></div>
+    <div class="stat-card">
+      <div class="stat-icon warning"><span class="material-icons">verified_user</span></div>
       <div class="stat-info">
-        <div class="stat-value">{{ countByStatut('Traité') }}</div>
-        <div class="stat-label">Traités</div>
+        <div class="stat-value">{{ notifications.expiredContracts || 0 }}</div>
+        <div class="stat-label">Contrats expirés</div>
       </div>
     </div>
-
-    <div class="stat-card" (click)="filterConstats('Rejeté')" [class.active]="activeTab === 'Rejeté'">
-      <div class="stat-icon danger"><span class="material-icons">cancel</span></div>
+    <div class="stat-card">
+      <div class="stat-icon default"><span class="material-icons">receipt_long</span></div>
       <div class="stat-info">
-        <div class="stat-value">{{ countByStatut('Rejeté') }}</div>
-        <div class="stat-label">Rejetés</div>
+        <div class="stat-value">{{ notifications.pendingInvoices || 0 }}</div>
+        <div class="stat-label">Factures à payer</div>
       </div>
     </div>
   </div>
 
-  <!-- KPI & Progress Bars -->
   <div class="kpi-row">
     <div class="kpi-card">
       <div class="kpi-header">
@@ -67,9 +59,6 @@
         <span class="kpi-title">Taux d'acceptation</span>
       </div>
       <div class="kpi-value">{{ getAcceptanceRate() }}</div>
-      <div class="kpi-bar">
-        <div class="kpi-bar-fill success" [style.width]="getStatutPercentage('Traité') + '%'"></div>
-      </div>
     </div>
     <div class="kpi-card">
       <div class="kpi-header">
@@ -77,33 +66,17 @@
         <span class="kpi-title">Taux de rejet</span>
       </div>
       <div class="kpi-value">{{ getRejectionRate() }}</div>
-      <div class="kpi-bar">
-        <div class="kpi-bar-fill danger" [style.width]="getStatutPercentage('Rejeté') + '%'"></div>
-      </div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card" *ngFor="let row of performance.slice(0, 3)">
       <div class="kpi-header">
-        <span class="material-icons kpi-icon warning">pending</span>
-        <span class="kpi-title">En attente</span>
+        <span class="material-icons kpi-icon info">badge</span>
+        <span class="kpi-title">{{ row.name }}</span>
       </div>
-      <div class="kpi-value">{{ getStatutPercentage('Non examiné') }}%</div>
-      <div class="kpi-bar">
-        <div class="kpi-bar-fill warning" [style.width]="getStatutPercentage('Non examiné') + '%'"></div>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="material-icons kpi-icon info">autorenew</span>
-        <span class="kpi-title">En cours</span>
-      </div>
-      <div class="kpi-value">{{ getStatutPercentage("En cours d'exécution") }}%</div>
-      <div class="kpi-bar">
-        <div class="kpi-bar-fill info" [style.width]="getStatutPercentage('En cours d\'exécution') + '%'"></div>
-      </div>
+      <div class="kpi-value">{{ row.treated || 0 }} traités</div>
+      <p class="subtitle">{{ row.assigned || 0 }} assignés - {{ row.rejectionRate || 0 }}% rejet</p>
     </div>
   </div>
 
-  <!-- Export Button -->
   <div class="export-section" *ngIf="constats.length > 0">
     <button class="export-btn" (click)="exportCSV()">
       <span class="material-icons">download</span>
@@ -112,13 +85,11 @@
   </div>
 </ng-container>
 
-<!-- ════════ EMPLOYEE DASHBOARD ════════ -->
 <ng-container *ngIf="!isAdmin()">
-  <!-- Employee Welcome -->
   <div class="welcome-header employe-header">
     <div class="header-content">
       <div class="header-text">
-        <h1>Bienvenue, {{ userName }} 🔧</h1>
+        <h1>Bienvenue, {{ userName }}</h1>
         <p class="subtitle">Espace traitement des dossiers</p>
       </div>
       <div class="header-actions">
@@ -130,7 +101,6 @@
     </div>
   </div>
 
-  <!-- Employee Quick Stats -->
   <div class="stats-row employee-stats">
     <div class="stat-card" (click)="filterConstats('Non examiné')" [class.active]="activeTab === 'Non examiné'">
       <div class="stat-icon warning"><span class="material-icons">inbox</span></div>
@@ -139,15 +109,13 @@
         <div class="stat-label">File d'attente</div>
       </div>
     </div>
-
     <div class="stat-card" (click)="filterConstats('En cours d\'exécution')" [class.active]="activeTab === 'En cours d\'exécution'">
       <div class="stat-icon info"><span class="material-icons">assignment_turned_in</span></div>
       <div class="stat-info">
         <div class="stat-value">{{ getMyAssignedCount() }}</div>
-        <div class="stat-label">Mes en cours</div>
+        <div class="stat-label">Mes dossiers</div>
       </div>
     </div>
-
     <div class="stat-card" (click)="filterConstats('Traité')" [class.active]="activeTab === 'Traité'">
       <div class="stat-icon success"><span class="material-icons">task_alt</span></div>
       <div class="stat-info">
@@ -158,14 +126,25 @@
   </div>
 </ng-container>
 
-<!-- ════════ CONSTAT LIST (Common) ════════ -->
 <div class="list-container">
   <div class="list-header">
-    <h2>{{ isAdmin() ? 'Liste des Constats' : 'Dossiers à traiter' }} ({{ filteredConstats.length }})</h2>
+    <h2>{{ isAdmin() ? 'Liste des constats' : 'Dossiers à traiter' }} ({{ filteredConstats.length }})</h2>
     <button class="refresh-btn" (click)="loadConstats()">
       <span class="material-icons" [class.spinning]="isLoading">refresh</span>
       Actualiser
     </button>
+  </div>
+
+  <div class="type-filters">
+    <button class="type-chip" *ngFor="let tab of tabs" [class.active]="activeTab === tab.statut" (click)="filterConstats(tab.statut)">
+      <span class="material-icons">{{ tab.icon }}</span>
+      {{ tab.label }}
+    </button>
+  </div>
+
+  <div class="search-bar">
+    <span class="material-icons search-icon">search</span>
+    <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="Recherche: plaque, client, lieu, statut, compagnie..." />
   </div>
 
   <div class="loading-state" *ngIf="isLoading">
@@ -175,8 +154,7 @@
 
   <div class="empty-state" *ngIf="!isLoading && filteredConstats.length === 0">
     <span class="material-icons empty-icon">{{ isAdmin() ? 'assignment' : 'check_circle_outline' }}</span>
-    <p *ngIf="isAdmin()">Aucun constat trouvé dans cette catégorie.</p>
-    <p *ngIf="!isAdmin()">🎉 Aucun dossier en attente. Bon travail !</p>
+    <p>Aucun constat trouvé dans cette catégorie.</p>
   </div>
 
   <div class="constats-grid" *ngIf="!isLoading && filteredConstats.length > 0">
@@ -194,13 +172,25 @@
           {{ constat.statut || 'Non examiné' }}
         </div>
       </div>
-      
+
       <div class="card-body">
         <div class="info-row">
           <span class="material-icons">location_on</span>
           <span>{{ constat.lieu || 'Lieu non spécifié' }}</span>
         </div>
-        
+        <div class="info-row" *ngIf="constat.priorite">
+          <span class="material-icons">flag</span>
+          <span>{{ constat.priorite }} - échéance {{ formatDate(constat.dateLimite) }}</span>
+        </div>
+        <div class="info-row" *ngIf="isOverdue(constat)">
+          <span class="material-icons">event_busy</span>
+          <span>Dossier en retard</span>
+        </div>
+        <div class="info-row" *ngIf="hasMissingPieces(constat)">
+          <span class="material-icons">attach_file_off</span>
+          <span>Pièces à vérifier</span>
+        </div>
+
         <div class="participants">
           <div class="participant">
             <span class="label">Véhicule A</span>

@@ -66,7 +66,14 @@ public class ServiceController {
             Double montant = body.get("montant") != null ? ((Number) body.get("montant")).doubleValue() : 0.0;
             String echeance = (String) body.get("echeance");
             String typeFacture = (String) body.get("typeFacture");
-            var facture = appServicesService.createFacture(user, mois, montant, echeance, typeFacture);
+            Long constatId = null;
+            Object constatIdRaw = body.get("constatId");
+            if (constatIdRaw instanceof Number number) {
+                constatId = number.longValue();
+            } else if (constatIdRaw != null && !constatIdRaw.toString().isBlank()) {
+                constatId = Long.parseLong(constatIdRaw.toString());
+            }
+            var facture = appServicesService.createFacture(user, mois, montant, echeance, typeFacture, constatId);
             return ResponseEntity.ok(Map.of("success", true, "id", facture.getId()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Données invalides: " + e.getMessage()));

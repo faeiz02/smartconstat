@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
+import 'package:provider/provider.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/user_model.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../providers/user_provider.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
@@ -37,6 +40,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       final user = UserModel.fromJson(userData);
 
       if (!mounted) return;
+      context.read<AuthProvider>().setAuthenticatedUser(user);
+      context.read<UserProvider>().setUser(user);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Email vérifié avec succès !"),

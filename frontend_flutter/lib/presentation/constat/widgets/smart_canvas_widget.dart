@@ -8,7 +8,19 @@ import '../screens/fullscreen_canvas_screen.dart';
 // ══════════════════════════════════════════════════════════════════════
 // DRAWING TOOL TYPES
 // ══════════════════════════════════════════════════════════════════════
-enum DrawingTool { pen, line, rectangle, circle, arrow, carA, carB, sign, text, eraser, move }
+enum DrawingTool {
+  pen,
+  line,
+  rectangle,
+  circle,
+  arrow,
+  carA,
+  carB,
+  sign,
+  text,
+  eraser,
+  move
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // STROKE MODELS
@@ -39,7 +51,7 @@ class PenStroke extends DrawingElement {
 
     final path = Path();
     path.moveTo(points[0].dx, points[0].dy);
-    
+
     if (points.length == 2) {
       path.lineTo(points[1].dx, points[1].dy);
     } else {
@@ -94,12 +106,10 @@ class ArrowDraw extends DrawingElement {
     const arrowSize = 14.0;
     final path = Path();
     path.moveTo(end.dx, end.dy);
-    path.lineTo(
-        end.dx - arrowSize * cos(angle - 0.5),
+    path.lineTo(end.dx - arrowSize * cos(angle - 0.5),
         end.dy - arrowSize * sin(angle - 0.5));
     path.moveTo(end.dx, end.dy);
-    path.lineTo(
-        end.dx - arrowSize * cos(angle + 0.5),
+    path.lineTo(end.dx - arrowSize * cos(angle + 0.5),
         end.dy - arrowSize * sin(angle + 0.5));
     canvas.drawPath(path, paint..strokeWidth = strokeWidth + 1);
   }
@@ -149,8 +159,8 @@ class CarStamp extends DrawingElement {
     canvas.translate(position.dx, position.dy);
     canvas.rotate(angle);
 
-    final carWidth = 50.0;
-    final carHeight = 26.0;
+    const carWidth = 50.0;
+    const carHeight = 26.0;
 
     // Car body
     final bodyRect = RRect.fromRectAndRadius(
@@ -183,16 +193,19 @@ class CarStamp extends DrawingElement {
     rearWindow.lineTo(-carWidth * 0.15, carHeight * 0.15);
     rearWindow.lineTo(-carWidth * 0.25, carHeight * 0.38);
     canvas.drawPath(rearWindow, outlinePaint);
-    
+
     // Direction arrow (front)
     final arrowPaint = Paint()
       ..color = color
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(carWidth * 0.3, 0), Offset(carWidth * 0.45, 0), arrowPaint);
-    canvas.drawLine(Offset(carWidth * 0.40, -4), Offset(carWidth * 0.45, 0), arrowPaint);
-    canvas.drawLine(Offset(carWidth * 0.40, 4), Offset(carWidth * 0.45, 0), arrowPaint);
+    canvas.drawLine(const Offset(carWidth * 0.3, 0),
+        const Offset(carWidth * 0.45, 0), arrowPaint);
+    canvas.drawLine(const Offset(carWidth * 0.40, -4),
+        const Offset(carWidth * 0.45, 0), arrowPaint);
+    canvas.drawLine(const Offset(carWidth * 0.40, 4),
+        const Offset(carWidth * 0.45, 0), arrowPaint);
 
     // Label
     final textSpan = TextSpan(
@@ -221,7 +234,8 @@ class SignStamp extends DrawingElement {
   Offset position;
   final String signType; // "STOP", "CEDER", "FEU", "SENS_INTERDIT"
   final double angle;
-  SignStamp(this.position, this.signType, this.angle, Color color) : super(color, 2.0);
+  SignStamp(this.position, this.signType, this.angle, Color color)
+      : super(color, 2.0);
 
   @override
   void draw(Canvas canvas, Size size) {
@@ -238,24 +252,32 @@ class SignStamp extends DrawingElement {
     if (signType == "STOP") {
       paint.color = Colors.red;
       final path = Path();
-      final radius = 20.0;
+      const radius = 20.0;
       for (int i = 0; i < 8; i++) {
         final angle = (i * pi / 4) - (pi / 8);
         final px = radius * cos(angle);
         final py = radius * sin(angle);
-        if (i == 0) path.moveTo(px, py);
-        else path.lineTo(px, py);
+        if (i == 0) {
+          path.moveTo(px, py);
+        } else {
+          path.lineTo(px, py);
+        }
       }
       path.close();
       canvas.drawPath(path, paint);
       canvas.drawPath(path, strokePaint);
-      
+
       final textPainter = TextPainter(
-        text: const TextSpan(text: "STOP", style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+        text: const TextSpan(
+            text: "STOP",
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold)),
         textDirection: TextDirection.ltr,
       )..layout();
-      textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
-      
+      textPainter.paint(
+          canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
     } else if (signType == "CEDER") {
       paint.color = Colors.red;
       final path = Path();
@@ -271,15 +293,14 @@ class SignStamp extends DrawingElement {
       innerPath.lineTo(0, 13);
       innerPath.close();
       canvas.drawPath(innerPath, paint);
-      
     } else if (signType == "FEU") {
       paint.color = Colors.grey.shade800;
-      final rect = RRect.fromRectAndRadius(const Rect.fromLTRB(-10, -25, 10, 25), const Radius.circular(4));
+      final rect = RRect.fromRectAndRadius(
+          const Rect.fromLTRB(-10, -25, 10, 25), const Radius.circular(4));
       canvas.drawRRect(rect, paint);
       canvas.drawCircle(const Offset(0, -15), 6, Paint()..color = Colors.red);
       canvas.drawCircle(const Offset(0, 0), 6, Paint()..color = Colors.orange);
       canvas.drawCircle(const Offset(0, 15), 6, Paint()..color = Colors.green);
-      
     } else if (signType == "SENS_INTERDIT") {
       paint.color = Colors.red;
       canvas.drawCircle(Offset.zero, 20, paint);
@@ -295,8 +316,7 @@ class SignStamp extends DrawingElement {
 class TextLabel extends DrawingElement {
   Offset position;
   final String text;
-  TextLabel(this.position, this.text, Color color)
-      : super(color, 1.0);
+  TextLabel(this.position, this.text, Color color) : super(color, 1.0);
 
   @override
   void draw(Canvas canvas, Size size) {
@@ -314,7 +334,7 @@ class TextLabel extends DrawingElement {
       textDirection: TextDirection.ltr,
     );
     tp.layout();
-    
+
     // Background
     final bgRect = Rect.fromLTWH(
       position.dx - 3,
@@ -326,7 +346,7 @@ class TextLabel extends DrawingElement {
       RRect.fromRectAndRadius(bgRect, const Radius.circular(3)),
       Paint()..color = Colors.white.withOpacity(0.85),
     );
-    
+
     tp.paint(canvas, position);
   }
 }
@@ -368,7 +388,8 @@ class SmartCanvasController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeElementsAt(Offset point, double radius, double Function(Offset p, Offset a, Offset b) pointToSegmentDist) {
+  void removeElementsAt(Offset point, double radius,
+      double Function(Offset p, Offset a, Offset b) pointToSegmentDist) {
     bool changed = false;
     elements.removeWhere((e) {
       bool shouldRemove = false;
@@ -389,21 +410,22 @@ class SmartCanvasController extends ChangeNotifier {
             (e.rect.bottomLeft - point).distance < radius ||
             (e.rect.bottomRight - point).distance < radius;
       }
-      
+
       if (shouldRemove) {
         changed = true;
         return true;
       }
       return false;
     });
-    
+
     if (changed) {
       _undoStack.clear();
       notifyListeners();
     }
   }
 
-  Future<Uint8List?> toPngBytes({double width = 1000, double height = 600}) async {
+  Future<Uint8List?> toPngBytes(
+      {double width = 1000, double height = 600}) async {
     try {
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, width, height));
@@ -464,12 +486,12 @@ class SmartCanvasWidget extends StatefulWidget {
 class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
   DrawingTool _currentTool = DrawingTool.pen;
   Color _currentColor = Colors.black;
-  double _currentStrokeWidth = 2.5;
-  
+  final double _currentStrokeWidth = 2.5;
+
   List<Offset> _currentPoints = [];
   Offset? _dragStart;
   Offset? _dragEnd;
-  double _carAngle = 0.0;
+  final double _carAngle = 0.0;
   String _currentSignType = "STOP";
 
   // Point sampling to reduce noise
@@ -482,7 +504,7 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
 
     for (var element in widget.controller.elements) {
       if (element == exclude) continue;
-      
+
       List<Offset> endpoints = [];
       if (element is PenStroke && element.points.isNotEmpty) {
         endpoints.add(element.points.first);
@@ -519,37 +541,53 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
         final el = widget.controller.elements[i];
         if (el is CarStamp) {
           if ((el.position - details.localPosition).distance < 40) {
-            _draggedElement = el; break;
+            _draggedElement = el;
+            break;
           }
         } else if (el is LineDraw) {
-          if (_pointToSegmentDist(details.localPosition, el.start, el.end) < 20) {
-            _draggedElement = el; break;
+          if (_pointToSegmentDist(details.localPosition, el.start, el.end) <
+              20) {
+            _draggedElement = el;
+            break;
           }
         } else if (el is ArrowDraw) {
-          if (_pointToSegmentDist(details.localPosition, el.start, el.end) < 20) {
-            _draggedElement = el; break;
+          if (_pointToSegmentDist(details.localPosition, el.start, el.end) <
+              20) {
+            _draggedElement = el;
+            break;
           }
         } else if (el is PenStroke) {
           bool hit = false;
           for (var p in el.points) {
-            if ((p - details.localPosition).distance < 20) { hit = true; break; }
+            if ((p - details.localPosition).distance < 20) {
+              hit = true;
+              break;
+            }
           }
-          if (hit) { _draggedElement = el; break; }
+          if (hit) {
+            _draggedElement = el;
+            break;
+          }
         } else if (el is CircleDraw) {
-          if ((el.center - details.localPosition).distance < el.radius + 15 && (el.center - details.localPosition).distance > el.radius - 15) {
-            _draggedElement = el; break;
+          if ((el.center - details.localPosition).distance < el.radius + 15 &&
+              (el.center - details.localPosition).distance > el.radius - 15) {
+            _draggedElement = el;
+            break;
           }
         } else if (el is RectDraw) {
           if (el.rect.inflate(15).contains(details.localPosition)) {
-            _draggedElement = el; break;
+            _draggedElement = el;
+            break;
           }
         } else if (el is SignStamp) {
           if ((el.position - details.localPosition).distance < 25) {
-            _draggedElement = el; break;
+            _draggedElement = el;
+            break;
           }
         } else if (el is TextLabel) {
           if ((el.position - details.localPosition).distance < 30) {
-            _draggedElement = el; break;
+            _draggedElement = el;
+            break;
           }
         }
       }
@@ -564,10 +602,12 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    if (_currentTool == DrawingTool.move && _draggedElement != null && _lastDragPos != null) {
+    if (_currentTool == DrawingTool.move &&
+        _draggedElement != null &&
+        _lastDragPos != null) {
       final delta = details.localPosition - _lastDragPos!;
       _lastDragPos = details.localPosition;
-      
+
       final el = _draggedElement!;
       if (el is CarStamp) {
         el.position += delta;
@@ -582,7 +622,7 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
       } else if (el is CircleDraw) {
         el.center += delta;
       } else if (el is PenStroke) {
-        for (int i=0; i<el.points.length; i++) {
+        for (int i = 0; i < el.points.length; i++) {
           el.points[i] += delta;
         }
       } else if (el is TextLabel) {
@@ -590,7 +630,7 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
       } else if (el is SignStamp) {
         el.position += delta;
       }
-      
+
       // Notify listeners to trigger a repaint
       widget.controller.notifyListeners();
     } else if (_currentTool == DrawingTool.pen) {
@@ -607,7 +647,10 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
       _eraseAt(details.localPosition);
     } else {
       Offset snapped = _snapToEndpoints(details.localPosition);
-      if (snapped == details.localPosition && _dragStart != null && (_currentTool == DrawingTool.line || _currentTool == DrawingTool.arrow)) {
+      if (snapped == details.localPosition &&
+          _dragStart != null &&
+          (_currentTool == DrawingTool.line ||
+              _currentTool == DrawingTool.arrow)) {
         snapped = _snapLine(_dragStart!, details.localPosition);
       }
       _dragEnd = snapped;
@@ -618,39 +661,52 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
   void _onPanEnd(DragEndDetails details) {
     if (_currentTool == DrawingTool.pen && _currentPoints.length >= 2) {
       _currentPoints.last = _snapToEndpoints(_currentPoints.last);
-      widget.controller.addElement(
-          PenStroke(List.from(_currentPoints), _currentColor, _currentStrokeWidth));
-    } else if (_currentTool == DrawingTool.line && _dragStart != null && _dragEnd != null) {
+      widget.controller.addElement(PenStroke(
+          List.from(_currentPoints), _currentColor, _currentStrokeWidth));
+    } else if (_currentTool == DrawingTool.line &&
+        _dragStart != null &&
+        _dragEnd != null) {
       widget.controller.addElement(
           LineDraw(_dragStart!, _dragEnd!, _currentColor, _currentStrokeWidth));
-    } else if (_currentTool == DrawingTool.arrow && _dragStart != null && _dragEnd != null) {
-      widget.controller.addElement(
-          ArrowDraw(_dragStart!, _dragEnd!, _currentColor, _currentStrokeWidth));
-    } else if (_currentTool == DrawingTool.rectangle && _dragStart != null && _dragEnd != null) {
+    } else if (_currentTool == DrawingTool.arrow &&
+        _dragStart != null &&
+        _dragEnd != null) {
+      widget.controller.addElement(ArrowDraw(
+          _dragStart!, _dragEnd!, _currentColor, _currentStrokeWidth));
+    } else if (_currentTool == DrawingTool.rectangle &&
+        _dragStart != null &&
+        _dragEnd != null) {
       widget.controller.addElement(RectDraw(
-          Rect.fromPoints(_dragStart!, _dragEnd!), _currentColor, _currentStrokeWidth));
-    } else if (_currentTool == DrawingTool.circle && _dragStart != null && _dragEnd != null) {
+          Rect.fromPoints(_dragStart!, _dragEnd!),
+          _currentColor,
+          _currentStrokeWidth));
+    } else if (_currentTool == DrawingTool.circle &&
+        _dragStart != null &&
+        _dragEnd != null) {
       double radius = (_dragEnd! - _dragStart!).distance;
-      widget.controller.addElement(CircleDraw(
-          _dragStart!, radius, _currentColor, _currentStrokeWidth));
+      widget.controller.addElement(
+          CircleDraw(_dragStart!, radius, _currentColor, _currentStrokeWidth));
     } else if (_currentTool == DrawingTool.carA && _dragStart != null) {
       double angle = 0.0;
       if (_dragEnd != null && _dragStart != _dragEnd) {
-        angle = atan2(_dragEnd!.dy - _dragStart!.dy, _dragEnd!.dx - _dragStart!.dx);
+        angle =
+            atan2(_dragEnd!.dy - _dragStart!.dy, _dragEnd!.dx - _dragStart!.dx);
       }
-      widget.controller.addElement(
-          CarStamp(_dragStart!, "A", angle, Colors.blue.shade700));
+      widget.controller
+          .addElement(CarStamp(_dragStart!, "A", angle, Colors.blue.shade700));
     } else if (_currentTool == DrawingTool.carB && _dragStart != null) {
       double angle = 0.0;
       if (_dragEnd != null && _dragStart != _dragEnd) {
-        angle = atan2(_dragEnd!.dy - _dragStart!.dy, _dragEnd!.dx - _dragStart!.dx);
+        angle =
+            atan2(_dragEnd!.dy - _dragStart!.dy, _dragEnd!.dx - _dragStart!.dx);
       }
-      widget.controller.addElement(
-          CarStamp(_dragStart!, "B", angle, Colors.red.shade700));
+      widget.controller
+          .addElement(CarStamp(_dragStart!, "B", angle, Colors.red.shade700));
     } else if (_currentTool == DrawingTool.sign && _dragStart != null) {
       double angle = 0.0;
       if (_dragEnd != null && _dragStart != _dragEnd) {
-        angle = atan2(_dragEnd!.dy - _dragStart!.dy, _dragEnd!.dx - _dragStart!.dx);
+        angle =
+            atan2(_dragEnd!.dy - _dragStart!.dy, _dragEnd!.dx - _dragStart!.dx);
       }
       widget.controller.addElement(
           SignStamp(_dragStart!, _currentSignType, angle, Colors.transparent));
@@ -660,9 +716,10 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
       if (_draggedElement != null) {
         final el = _draggedElement!;
         if (el is LineDraw || el is ArrowDraw) {
-          Offset startPt = (el is LineDraw) ? el.start : (el as ArrowDraw).start;
+          Offset startPt =
+              (el is LineDraw) ? el.start : (el as ArrowDraw).start;
           Offset endPt = (el is LineDraw) ? el.end : (el as ArrowDraw).end;
-          
+
           Offset? snappedDelta;
           Offset snappedStart = _snapToEndpoints(startPt, exclude: el);
           if (snappedStart != startPt) {
@@ -673,7 +730,7 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
               snappedDelta = snappedEnd - endPt;
             }
           }
-          
+
           if (snappedDelta != null) {
             if (el is LineDraw) {
               el.start += snappedDelta;
@@ -685,7 +742,7 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
           }
         }
       }
-      
+
       _draggedElement = null;
       _lastDragPos = null;
       widget.controller.notifyListeners();
@@ -722,7 +779,8 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Ajouter du texte", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        title: const Text("Ajouter du texte",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -732,16 +790,19 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Annuler")),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Annuler")),
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                widget.controller.addElement(
-                    TextLabel(const Offset(20, 20), controller.text, _currentColor));
+                widget.controller.addElement(TextLabel(
+                    const Offset(20, 20), controller.text, _currentColor));
               }
               Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondaryBlue),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondaryBlue),
             child: const Text("Ajouter", style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -754,31 +815,42 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Type de panneau", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        title: const Text("Type de panneau",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
         content: Wrap(
           spacing: 12,
           runSpacing: 12,
           alignment: WrapAlignment.center,
           children: ["STOP", "CEDER", "FEU", "SENS_INTERDIT"].map((type) {
             final isSelected = _currentSignType == type;
-            final label = {"STOP": "Stop", "CEDER": "Cédez-le-passage", "FEU": "Feu tricolore", "SENS_INTERDIT": "Sens interdit"}[type]!;
+            final label = {
+              "STOP": "Stop",
+              "CEDER": "Cédez-le-passage",
+              "FEU": "Feu tricolore",
+              "SENS_INTERDIT": "Sens interdit"
+            }[type]!;
             return GestureDetector(
               onTap: () {
                 setState(() => _currentSignType = type);
                 Navigator.pop(ctx);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.secondaryBlue : AppColors.scaffold,
+                  color:
+                      isSelected ? AppColors.secondaryBlue : AppColors.scaffold,
                   borderRadius: BorderRadius.circular(8),
-                  border: isSelected ? Border.all(color: AppColors.primaryBlue) : null,
+                  border: isSelected
+                      ? Border.all(color: AppColors.primaryBlue)
+                      : null,
                 ),
-                child: Text(label, style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : AppColors.mediumGrey,
-                )),
+                child: Text(label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : AppColors.mediumGrey,
+                    )),
               ),
             );
           }).toList(),
@@ -855,12 +927,15 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
             _toolBtn(DrawingTool.line, Icons.horizontal_rule_rounded, "Ligne"),
             _toolBtn(DrawingTool.arrow, Icons.arrow_forward_rounded, "Flèche"),
             _toolBtn(DrawingTool.rectangle, Icons.crop_square_rounded, "Rect"),
-            _toolBtn(DrawingTool.circle, Icons.radio_button_unchecked_rounded, "Cercle"),
+            _toolBtn(DrawingTool.circle, Icons.radio_button_unchecked_rounded,
+                "Cercle"),
             _divider(),
             _toolBtn(DrawingTool.move, Icons.pan_tool_rounded, "Déplacer"),
             _divider(),
-            _toolBtn(DrawingTool.carA, Icons.directions_car, "Auto A", Colors.blue.shade700),
-            _toolBtn(DrawingTool.carB, Icons.directions_car, "Auto B", Colors.red.shade700),
+            _toolBtn(DrawingTool.carA, Icons.directions_car, "Auto A",
+                Colors.blue.shade700),
+            _toolBtn(DrawingTool.carB, Icons.directions_car, "Auto B",
+                Colors.red.shade700),
             _toolBtn(DrawingTool.sign, Icons.traffic_rounded, "Panneau"),
             _divider(),
             _toolBtn(DrawingTool.text, Icons.text_fields_rounded, "Texte"),
@@ -882,7 +957,8 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
         Navigator.of(context).push(
           MaterialPageRoute(
             fullscreenDialog: true,
-            builder: (context) => FullscreenCanvasScreen(controller: widget.controller),
+            builder: (context) =>
+                FullscreenCanvasScreen(controller: widget.controller),
           ),
         );
       },
@@ -894,8 +970,13 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
         ),
         child: const Column(
           children: [
-            Icon(Icons.fullscreen_rounded, size: 18, color: AppColors.secondaryBlue),
-            Text("Plein écran", style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.secondaryBlue)),
+            Icon(Icons.fullscreen_rounded,
+                size: 18, color: AppColors.secondaryBlue),
+            Text("Plein écran",
+                style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.secondaryBlue)),
           ],
         ),
       ),
@@ -903,12 +984,14 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
   }
 
   Widget _divider() => Container(
-    width: 1, height: 30,
-    margin: const EdgeInsets.symmetric(horizontal: 4),
-    color: AppColors.lightGrey,
-  );
+        width: 1,
+        height: 30,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        color: AppColors.lightGrey,
+      );
 
-  Widget _toolBtn(DrawingTool tool, IconData icon, String label, [Color? overrideColor]) {
+  Widget _toolBtn(DrawingTool tool, IconData icon, String label,
+      [Color? overrideColor]) {
     final isSelected = _currentTool == tool;
     final color = overrideColor ?? AppColors.secondaryBlue;
     return GestureDetector(
@@ -929,13 +1012,15 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: isSelected ? color : AppColors.mediumGrey),
+            Icon(icon,
+                size: 18, color: isSelected ? color : AppColors.mediumGrey),
             const SizedBox(height: 2),
-            Text(label, style: TextStyle(
-              fontSize: 9,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? color : AppColors.mediumGrey,
-            )),
+            Text(label,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? color : AppColors.mediumGrey,
+                )),
           ],
         ),
       ),
@@ -950,17 +1035,26 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: ([Colors.black, Colors.blue.shade700, Colors.red.shade700, Colors.green.shade700, Colors.grey]).map((c) {
+              children: ([
+                Colors.black,
+                Colors.blue.shade700,
+                Colors.red.shade700,
+                Colors.green.shade700,
+                Colors.grey
+              ]).map((c) {
                 return GestureDetector(
                   onTap: () => setState(() => _currentColor = c),
                   child: Container(
-                    width: 24, height: 24,
+                    width: 24,
+                    height: 24,
                     margin: const EdgeInsets.only(right: 6),
                     decoration: BoxDecoration(
                       color: c,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: _currentColor == c ? AppColors.secondaryBlue : Colors.transparent,
+                        color: _currentColor == c
+                            ? AppColors.secondaryBlue
+                            : Colors.transparent,
                         width: 2.5,
                       ),
                     ),
@@ -972,18 +1066,22 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
         ),
         // Undo/Redo
         IconButton(
-          onPressed: widget.controller.canUndo ? () {
-            widget.controller.undo();
-            setState(() {});
-          } : null,
+          onPressed: widget.controller.canUndo
+              ? () {
+                  widget.controller.undo();
+                  setState(() {});
+                }
+              : null,
           icon: const Icon(Icons.undo_rounded, size: 20),
           tooltip: "Annuler",
         ),
         IconButton(
-          onPressed: widget.controller.canRedo ? () {
-            widget.controller.redo();
-            setState(() {});
-          } : null,
+          onPressed: widget.controller.canRedo
+              ? () {
+                  widget.controller.redo();
+                  setState(() {});
+                }
+              : null,
           icon: const Icon(Icons.redo_rounded, size: 20),
           tooltip: "Rétablir",
         ),
@@ -992,7 +1090,8 @@ class _SmartCanvasWidgetState extends State<SmartCanvasWidget> {
             widget.controller.clear();
             setState(() {});
           },
-          icon: const Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.redDanger),
+          icon: const Icon(Icons.delete_outline_rounded,
+              size: 20, color: AppColors.redDanger),
           tooltip: "Tout effacer",
         ),
       ],
@@ -1048,7 +1147,8 @@ class _CanvasPainter extends CustomPainter {
       for (int i = 1; i < currentPoints.length - 1; i++) {
         final p0 = currentPoints[i];
         final p1 = currentPoints[i + 1];
-        path.quadraticBezierTo(p0.dx, p0.dy, (p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
+        path.quadraticBezierTo(
+            p0.dx, p0.dy, (p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
       }
       path.lineTo(currentPoints.last.dx, currentPoints.last.dy);
       canvas.drawPath(path, previewPaint);
@@ -1067,12 +1167,15 @@ class _CanvasPainter extends CustomPainter {
       } else if (currentTool == DrawingTool.arrow) {
         canvas.drawLine(dragStart!, dragEnd!, previewPaint);
         // Arrow preview
-        final angle = atan2(dragEnd!.dy - dragStart!.dy, dragEnd!.dx - dragStart!.dx);
+        final angle =
+            atan2(dragEnd!.dy - dragStart!.dy, dragEnd!.dx - dragStart!.dx);
         final tp = Path();
         tp.moveTo(dragEnd!.dx, dragEnd!.dy);
-        tp.lineTo(dragEnd!.dx - 12 * cos(angle - 0.5), dragEnd!.dy - 12 * sin(angle - 0.5));
+        tp.lineTo(dragEnd!.dx - 12 * cos(angle - 0.5),
+            dragEnd!.dy - 12 * sin(angle - 0.5));
         tp.moveTo(dragEnd!.dx, dragEnd!.dy);
-        tp.lineTo(dragEnd!.dx - 12 * cos(angle + 0.5), dragEnd!.dy - 12 * sin(angle + 0.5));
+        tp.lineTo(dragEnd!.dx - 12 * cos(angle + 0.5),
+            dragEnd!.dy - 12 * sin(angle + 0.5));
         canvas.drawPath(tp, previewPaint);
       } else if (currentTool == DrawingTool.rectangle) {
         canvas.drawRect(Rect.fromPoints(dragStart!, dragEnd!), previewPaint);
@@ -1082,16 +1185,22 @@ class _CanvasPainter extends CustomPainter {
       } else if (currentTool == DrawingTool.sign) {
         double angle = 0.0;
         if (dragStart != dragEnd) {
-          angle = atan2(dragEnd!.dy - dragStart!.dy, dragEnd!.dx - dragStart!.dx);
+          angle =
+              atan2(dragEnd!.dy - dragStart!.dy, dragEnd!.dx - dragStart!.dx);
         }
-        SignStamp(dragStart!, currentSignType, angle, Colors.transparent).draw(canvas, size);
-      } else if (currentTool == DrawingTool.carA || currentTool == DrawingTool.carB) {
+        SignStamp(dragStart!, currentSignType, angle, Colors.transparent)
+            .draw(canvas, size);
+      } else if (currentTool == DrawingTool.carA ||
+          currentTool == DrawingTool.carB) {
         double angle = 0.0;
         if (dragStart != dragEnd) {
-          angle = atan2(dragEnd!.dy - dragStart!.dy, dragEnd!.dx - dragStart!.dx);
+          angle =
+              atan2(dragEnd!.dy - dragStart!.dy, dragEnd!.dx - dragStart!.dx);
         }
         String label = currentTool == DrawingTool.carA ? "A" : "B";
-        Color carColor = currentTool == DrawingTool.carA ? Colors.blue.shade700 : Colors.red.shade700;
+        Color carColor = currentTool == DrawingTool.carA
+            ? Colors.blue.shade700
+            : Colors.red.shade700;
         CarStamp(dragStart!, label, angle, carColor).draw(canvas, size);
       }
     }

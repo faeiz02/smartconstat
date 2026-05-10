@@ -47,6 +47,10 @@ class ConstatModel {
   final String? statut;
   final String? userName;
   final String? userEmail;
+  final String? factureStatut;
+  final double? montantFacturesTotal;
+  final int? nombreFactures;
+  final String? priseEnChargeDecision;
 
   ConstatModel({
     this.accidentId,
@@ -85,6 +89,10 @@ class ConstatModel {
     this.statut,
     this.userName,
     this.userEmail,
+    this.factureStatut,
+    this.montantFacturesTotal,
+    this.nombreFactures,
+    this.priseEnChargeDecision,
   });
 
   factory ConstatModel.fromJson(Map<String, dynamic> json) {
@@ -125,6 +133,10 @@ class ConstatModel {
       statut: json['statut'],
       userName: json['userName'],
       userEmail: json['userEmail'],
+      factureStatut: json['factureStatut'],
+      montantFacturesTotal: json['montantFacturesTotal'] != null ? (json['montantFacturesTotal'] as num).toDouble() : null,
+      nombreFactures: json['nombreFactures'],
+      priseEnChargeDecision: json['priseEnChargeDecision'],
     );
   }
 
@@ -166,6 +178,10 @@ class ConstatModel {
       'statut': statut,
       'userName': userName,
       'userEmail': userEmail,
+      'factureStatut': factureStatut,
+      'montantFacturesTotal': montantFacturesTotal,
+      'nombreFactures': nombreFactures,
+      'priseEnChargeDecision': priseEnChargeDecision,
     };
   }
 }

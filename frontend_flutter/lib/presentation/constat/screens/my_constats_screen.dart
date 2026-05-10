@@ -128,7 +128,7 @@ class _MyConstatsScreenState extends State<MyConstatsScreen> {
         controller: _searchController,
         decoration: InputDecoration(
           hintText: "Rechercher (lieu, plaque, date)...",
-          hintStyle: TextStyle(color: AppColors.mediumGrey, fontSize: 14),
+          hintStyle: const TextStyle(color: AppColors.mediumGrey, fontSize: 14),
           prefixIcon: const Icon(Icons.search_rounded, color: AppColors.secondaryBlue),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
@@ -168,7 +168,7 @@ class _MyConstatsScreenState extends State<MyConstatsScreen> {
         if (status.toLowerCase().contains("traité") || status.toLowerCase().contains("validé")) {
           statusColor = AppColors.greenSuccess;
           statusBg = AppColors.greenSuccess.withOpacity(0.1);
-        } else if (status.toLowerCase().contains("refusé")) {
+        } else if (status.toLowerCase().contains("refusé") || status.toLowerCase().contains("rejet")) {
           statusColor = AppColors.redDanger;
           statusBg = AppColors.redDanger.withOpacity(0.1);
         } else {
@@ -224,7 +224,7 @@ class _MyConstatsScreenState extends State<MyConstatsScreen> {
                       const SizedBox(height: 4),
                       Text(
                         constat.dateTime != null ? DateFormatter.formatDate(constat.dateTime!) : "Date inconnue",
-                        style: TextStyle(color: AppColors.mediumGrey, fontSize: 13),
+                        style: const TextStyle(color: AppColors.mediumGrey, fontSize: 13),
                       ),
                       const SizedBox(height: 8),
                       Container(
@@ -232,6 +232,13 @@ class _MyConstatsScreenState extends State<MyConstatsScreen> {
                         decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(6)),
                         child: Text(status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
                       ),
+                      if (constat.factureStatut != null && constat.factureStatut != "Non demandee") ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          "${constat.factureStatut} · ${(constat.montantFacturesTotal ?? 0).toStringAsFixed(0)} DT",
+                          style: const TextStyle(color: AppColors.darkGrey, fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -263,7 +270,7 @@ class _MyConstatsScreenState extends State<MyConstatsScreen> {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.mediumGrey, fontSize: 15),
+              style: const TextStyle(color: AppColors.mediumGrey, fontSize: 15),
             ),
           ],
         ),

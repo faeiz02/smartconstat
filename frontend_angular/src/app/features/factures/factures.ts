@@ -81,7 +81,18 @@ export class FacturesComponent implements OnInit {
   getTotalMontant(): number { return this.factures.reduce((sum, f) => sum + (f.montant || 0), 0); }
 
   getStatutClass(statut?: string): string {
-    switch (statut) { case 'Payée': return 'status-success'; case 'À payer': return 'status-warning'; default: return 'status-default'; }
+    switch (statut) {
+      case 'Payée':
+      case 'Prise en charge directe':
+        return 'status-success';
+      case 'À payer':
+      case 'En attente':
+        return 'status-warning';
+      case 'Expertise requise':
+        return 'status-info';
+      default:
+        return 'status-default';
+    }
   }
 
   getTypeIcon(type?: string): string {

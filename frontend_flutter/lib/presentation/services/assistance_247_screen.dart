@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/services/api_service_features.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Assistance247Screen extends StatefulWidget {
   const Assistance247Screen({super.key});
@@ -27,6 +28,16 @@ class _Assistance247ScreenState extends State<Assistance247Screen> {
     if (iconStr.contains("home_repair_service")) return Icons.home_repair_service_outlined;
     if (iconStr.contains("gavel")) return Icons.gavel_outlined;
     return Icons.help_outline;
+  }
+
+  Future<void> _launchPhone(String number) async {
+    final phone = number.replaceAll(" ", "");
+    if (phone.isEmpty) return;
+
+    final uri = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 
   @override
@@ -71,7 +82,7 @@ class _Assistance247ScreenState extends State<Assistance247Screen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [AppColors.purpleAssistance, const Color(0xFFA78BFA)]),
+        gradient: const LinearGradient(colors: [AppColors.purpleAssistance, Color(0xFFA78BFA)]),
         borderRadius: BorderRadius.circular(22),
         boxShadow: [BoxShadow(color: AppColors.purpleAssistance.withOpacity(0.25), blurRadius: 16, offset: const Offset(0, 6))],
       ),
@@ -144,7 +155,7 @@ class _Assistance247ScreenState extends State<Assistance247Screen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () => _launchPhone(number),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.purpleAssistance,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -189,7 +200,7 @@ class _Assistance247ScreenState extends State<Assistance247Screen> {
               ),
               const SizedBox(height: 10),
               Text(t["title"] ?? "", style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-              Text(t["description"] ?? "", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11), textAlign: TextAlign.center),
+              Text(t["description"] ?? "", style: const TextStyle(color: AppColors.mediumGrey, fontSize: 11), textAlign: TextAlign.center),
             ],
           ),
         );

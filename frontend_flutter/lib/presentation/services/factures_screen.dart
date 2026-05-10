@@ -15,6 +15,7 @@ class FacturesScreen extends StatefulWidget {
 class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<dynamic> _allFactures = [];
+  List<dynamic> _dossiers = [];
   bool _isLoading = true;
 
   final List<Map<String, dynamic>> _categories = [
@@ -42,9 +43,22 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
   Future<void> _loadFactures() async {
     setState(() => _isLoading = true);
     final factures = await ApiServiceFeatures.getFactures();
+    final dossiers = await ApiServiceFeatures.getMyConstats();
     if (mounted) {
-      setState(() { _allFactures = factures; _isLoading = false; });
+      setState(() {
+        _allFactures = factures;
+        _dossiers = dossiers.where(_isFactureDossier).toList();
+        _isLoading = false;
+      });
     }
+  }
+
+  bool _isFactureDossier(dynamic constat) {
+    final statut = (constat['statut'] ?? '').toString().toLowerCase();
+    final factureStatut = (constat['factureStatut'] ?? '').toString().toLowerCase();
+    return statut.contains('trait') ||
+        statut.contains('expertise') ||
+        (factureStatut.isNotEmpty && factureStatut != 'non demandee');
   }
 
   List<dynamic> _getFilteredFactures() {
@@ -97,6 +111,14 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
     }
   }
 
+  Color _getStatusColor(String? statut) {
+    final value = (statut ?? '').toLowerCase();
+    if (value.contains('prise') || value.contains('payée') || value.contains('payee')) return AppColors.greenSuccess;
+    if (value.contains('expertise')) return AppColors.secondaryBlue;
+    if (value.contains('rejet')) return AppColors.redDanger;
+    return AppColors.orangeWarning;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,6 +157,9 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
     final moisCtrl = TextEditingController();
     final montantCtrl = TextEditingController();
     String selectedType = 'Maladie';
+    int? selectedConstatId = _dossiers.isNotEmpty
+        ? int.tryParse((_dossiers.first['id'] ?? _dossiers.first['accidentId']).toString())
+        : null;
     DateTime selectedDate = DateTime.now().add(const Duration(days: 30));
     File? selectedImage;
 
@@ -177,7 +202,7 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: selectedType,
+                initialValue: selectedType,
                 decoration: InputDecoration(
                   labelText: "Type de facture",
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
@@ -185,6 +210,24 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
                 ),
                 items: ['Maladie', 'Réparation', 'Visite technique', 'Autre'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
                 onChanged: (v) => setModalState(() => selectedType = v!),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int?>(
+                initialValue: selectedConstatId,
+                decoration: InputDecoration(
+                  labelText: "Dossier constat",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  prefixIcon: const Icon(Icons.folder_copy_outlined),
+                ),
+                items: [
+                  const DropdownMenuItem<int?>(value: null, child: Text("Sans dossier")),
+                  ..._dossiers.map((d) {
+                    final id = int.tryParse((d['id'] ?? d['accidentId']).toString());
+                    final label = "Constat #${d['accidentId'] ?? d['id']} - ${d['factureStatut'] ?? d['statut'] ?? ''}";
+                    return DropdownMenuItem<int?>(value: id, child: Text(label, overflow: TextOverflow.ellipsis));
+                  }),
+                ],
+                onChanged: (v) => setModalState(() => selectedConstatId = v),
               ),
               const SizedBox(height: 12),
               InkWell(
@@ -243,6 +286,7 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
                       montant: double.tryParse(montantCtrl.text) ?? 0,
                       echeance: echeanceStr,
                       typeFacture: selectedType,
+                      constatId: selectedConstatId,
                     );
                     if (mounted) Navigator.pop(ctx);
                     if (factureId != -1) {
@@ -281,7 +325,8 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
     double totalPaye = 0;
     double aPayer = 0;
     for (var f in factures) {
-      if (f['statut'] == 'Payée') {
+      final statut = (f['statut'] ?? '').toString().toLowerCase();
+      if (statut.contains('payée') || statut.contains('payee') || statut.contains('prise')) {
         totalPaye += (f['montant'] as num).toDouble();
       } else {
         aPayer += (f['montant'] as num).toDouble();
@@ -355,7 +400,7 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
           Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
           Text(amount, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color)),
-          Text(label, style: TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
+          Text(label, style: const TextStyle(color: AppColors.mediumGrey, fontSize: 12)),
         ],
       ),
     );
@@ -376,8 +421,7 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
     }
 
     return Column(children: factures.map((f) {
-      final isPaid = f["statut"] == "Payée";
-      final color = isPaid ? AppColors.greenSuccess : AppColors.orangeWarning;
+      final color = _getStatusColor(f["statut"]?.toString());
       final typeColor = _getTypeColor(f['typeFacture']);
       final typeIcon = _getTypeIcon(f['typeFacture']);
       final factureId = f['id'];
@@ -428,9 +472,25 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
                           child: Text(f['typeFacture'] ?? 'Autre', style: TextStyle(color: typeColor, fontSize: 9, fontWeight: FontWeight.w600)),
                         ),
                         const SizedBox(width: 6),
-                        Text("Éch: ${f["echeance"] ?? ''}", style: TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
+                        Text("Éch: ${f["echeance"] ?? ''}", style: const TextStyle(color: AppColors.mediumGrey, fontSize: 11)),
                       ],
                     ),
+                    if (f["constatId"] != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        "Dossier constat #${f["constatId"]}",
+                        style: const TextStyle(color: AppColors.darkGrey, fontSize: 11, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                    if (f["priseEnChargeDecision"] != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        f["priseEnChargeDecision"].toString(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: AppColors.mediumGrey, fontSize: 11),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -452,7 +512,7 @@ class _FacturesScreenState extends State<FacturesScreen> with SingleTickerProvid
                           context: context,
                           builder: (ctx) => Dialog(
                             child: InteractiveViewer(
-                              child: Image.network("${ApiConstants.baseUrl}/${f["photoUrl"]}"),
+                              child: Image.network("${ApiConstants.backendUrl}/${f["photoUrl"]}"),
                             ),
                           ),
                         );

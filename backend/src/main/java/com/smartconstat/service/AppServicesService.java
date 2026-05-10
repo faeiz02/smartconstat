@@ -4,27 +4,38 @@ import com.smartconstat.model.*;
 import com.smartconstat.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AppServicesService {
 
     private final FactureRepository factureRepository;
+    private final ConstatRepository constatRepository;
+    private final ClientNotificationRepository notificationRepository;
     private final EmergencyNumberRepository emergencyNumberRepository;
     private final AssistanceTypeRepository assistanceTypeRepository;
     private final HealthcareProfessionalRepository hpRepository;
 
-    public List<Facture> getUserFactures(User user) {
-        return factureRepository.findByUserOrderByEcheanceDesc(user);
+    public List<Map<String, Object>> getUserFactures(User user) {
+        return factureRepository.findByUserOrderByEcheanceDesc(user)
+                .stream()
+                .map(this::factureToMap)
+                .toList();
     }
 
-    public List<Facture> getUserFacturesByType(User user, String typeFacture) {
-        return factureRepository.findByUserAndTypeFactureOrderByEcheanceDesc(user, typeFacture);
+    public List<Map<String, Object>> getUserFacturesByType(User user, String typeFacture) {
+        return factureRepository.findByUserAndTypeFactureOrderByEcheanceDesc(user, typeFacture)
+                .stream()
+                .map(this::factureToMap)
+                .toList();
     }
 
     public boolean deleteFacture(Long factureId, User user) {
@@ -37,15 +48,34 @@ public class AppServicesService {
     }
 
     public Facture createFacture(User user, String mois, Double montant, String echeance, String typeFacture) {
+        return createFacture(user, mois, montant, echeance, typeFacture, null);
+    }
+
+    public Facture createFacture(User user, String mois, Double montant, String echeance, String typeFacture, Long constatId) {
+        Constat constat = null;
+        if (constatId != null) {
+            Optional<Constat> opt = constatRepository.findById(constatId);
+            if (opt.isEmpty() || opt.get().getUser() == null || !opt.get().getUser().getId().equals(user.getId())) {
+                throw new IllegalArgumentException("Dossier constat non trouve ou non autorise");
+            }
+            constat = opt.get();
+        }
+
         Facture facture = Facture.builder()
                 .user(user)
+                .constat(constat)
                 .mois(mois)
                 .montant(montant)
                 .echeance(echeance != null ? LocalDate.parse(echeance) : null)
-                .statut("À payer")
+                .statut(constat != null ? "En attente" : "\u00c0 payer")
                 .typeFacture(typeFacture != null ? typeFacture : "Autre")
+                .decisionStatut(constat != null ? "En attente" : null)
                 .build();
-        return factureRepository.save(facture);
+        facture = factureRepository.save(facture);
+        if (constat != null) {
+            evaluateDossierFactures(constat);
+        }
+        return facture;
     }
 
     public boolean saveFacturePhoto(Long factureId, String photoUrl, User user) {
@@ -78,14 +108,7 @@ public class AppServicesService {
         List<Facture> factures = factureRepository.findAll();
         List<Map<String, Object>> result = new java.util.ArrayList<>();
         for (Facture f : factures) {
-            Map<String, Object> map = new java.util.LinkedHashMap<>();
-            map.put("id", f.getId());
-            map.put("mois", f.getMois());
-            map.put("montant", f.getMontant());
-            map.put("echeance", f.getEcheance() != null ? f.getEcheance().toString() : null);
-            map.put("statut", f.getStatut());
-            map.put("typeFacture", f.getTypeFacture());
-            map.put("photoUrl", f.getPhotoUrl());
+            Map<String, Object> map = factureToMap(f);
             if (f.getUser() != null) {
                 map.put("userId", f.getUser().getId());
                 map.put("userName", (f.getUser().getNom() != null ? f.getUser().getNom() : "") + " " + (f.getUser().getPrenom() != null ? f.getUser().getPrenom() : ""));
@@ -94,6 +117,86 @@ public class AppServicesService {
             result.add(map);
         }
         return result;
+    }
+
+    private void evaluateDossierFactures(Constat constat) {
+        List<Facture> factures = factureRepository.findByConstatId(constat.getId());
+        double total = factures.stream()
+                .map(Facture::getMontant)
+                .filter(java.util.Objects::nonNull)
+                .mapToDouble(Double::doubleValue)
+                .sum();
+
+        constat.setNombreFactures(factures.size());
+        constat.setMontantFacturesTotal(total);
+
+        boolean requiresExpert = total > ConstatService.FACTURE_EXPERTISE_THRESHOLD;
+        String decisionStatut = requiresExpert ? "Expertise requise" : "Prise en charge directe";
+        String decision = requiresExpert
+                ? "Le total des factures depasse 500 TND. Une expertise est requise avant la prise en charge finale."
+                : "Le total des factures est inferieur ou egal a 500 TND. La prise en charge peut etre traitee sans expertise.";
+
+        constat.setFactureStatut(decisionStatut);
+        constat.setPriseEnChargeDecision(decision);
+        constat.setMontantEstime(total);
+
+        if (requiresExpert) {
+            constat.setStatut("En expertise");
+            constat.setEscalade(true);
+            constat.setEscaladeRaison("Total factures > 500 TND");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        for (Facture facture : factures) {
+            facture.setStatut(decisionStatut);
+            facture.setDecisionStatut(decisionStatut);
+            facture.setDecisionCommentaire(decision);
+            facture.setDecisionAt(now);
+        }
+
+        factureRepository.saveAll(factures);
+        constatRepository.save(constat);
+        notifyClient(
+                constat,
+                decisionStatut,
+                requiresExpert
+                        ? "Vos factures du constat #" + constat.getId() + " depassent 500 TND. Le dossier passe en expertise."
+                        : "Vos factures du constat #" + constat.getId() + " sont inferieures ou egales a 500 TND. La prise en charge directe est lancee.",
+                requiresExpert ? "EXPERTISE_REQUISE" : "PRISE_EN_CHARGE_DIRECTE"
+        );
+    }
+
+    private void notifyClient(Constat constat, String title, String message, String type) {
+        if (constat == null || constat.getUser() == null) return;
+        notificationRepository.save(ClientNotification.builder()
+                .user(constat.getUser())
+                .constat(constat)
+                .title(title)
+                .message(message)
+                .type(type)
+                .build());
+    }
+
+    private Map<String, Object> factureToMap(Facture f) {
+        Map<String, Object> map = new java.util.LinkedHashMap<>();
+        map.put("id", f.getId());
+        map.put("mois", f.getMois());
+        map.put("montant", f.getMontant());
+        map.put("echeance", f.getEcheance() != null ? f.getEcheance().toString() : null);
+        map.put("statut", f.getStatut());
+        map.put("typeFacture", f.getTypeFacture());
+        map.put("photoUrl", f.getPhotoUrl());
+        map.put("decisionStatut", f.getDecisionStatut());
+        map.put("decisionCommentaire", f.getDecisionCommentaire());
+        map.put("decisionAt", f.getDecisionAt() != null ? f.getDecisionAt().toString() : null);
+        if (f.getConstat() != null) {
+            map.put("constatId", f.getConstat().getId());
+            map.put("dossierStatut", f.getConstat().getStatut());
+            map.put("factureStatut", f.getConstat().getFactureStatut());
+            map.put("montantFacturesTotal", f.getConstat().getMontantFacturesTotal());
+            map.put("priseEnChargeDecision", f.getConstat().getPriseEnChargeDecision());
+        }
+        return map;
     }
 
     /** Admin: delete any facture */

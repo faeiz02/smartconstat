@@ -125,6 +125,9 @@ class AuthService {
         if (data['token'] != null) {
           await SecureStorageService.saveToken(data['token']);
         }
+        if (data['user'] != null && data['user']['id'] != null) {
+          await SecureStorageService.saveUserId(data['user']['id'] as int);
+        }
         return {"success": true, "message": data['message'], "user": data['user']};
       } else {
         return {"success": false, "message": data['message'] ?? "Code incorrect"};
@@ -271,5 +274,6 @@ class AuthService {
   static Future<void> cancelPendingRegistration() async {
     // Nettoyage local uniquement
     await SecureStorageService.deleteToken();
+    await SecureStorageService.deleteUserId();
   }
 }

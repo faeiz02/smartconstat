@@ -20,20 +20,20 @@ class AppTheme {
       fontFamily: 'Poppins',
 
       // ─── AppBar ───
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0.5,
         centerTitle: true,
         backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: Colors.white,
           letterSpacing: 0.3,
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        shape: const RoundedRectangleBorder(
+        iconTheme: IconThemeData(color: Colors.white),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
       ),
@@ -141,14 +141,14 @@ class AppTheme {
       ),
 
       // ─── Bottom Nav ───
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
         selectedItemColor: AppColors.secondaryBlue,
         unselectedItemColor: AppColors.mediumGrey,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: const TextStyle(fontSize: 12),
+        selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontSize: 12),
       ),
 
       // ─── Chips ───
