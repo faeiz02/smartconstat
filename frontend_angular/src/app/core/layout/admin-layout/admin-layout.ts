@@ -10,8 +10,8 @@ import { ClientService } from '../../services/client.service';
   selector: 'app-admin-layout',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './admin-layout.html',
-  styleUrls: ['./admin-layout.css']
+  templateUrl: './admin-layout.component.html',
+  styleUrls: ['./admin-layout.component.css']
 })
 export class AdminLayoutComponent implements OnInit {
   userName = '';

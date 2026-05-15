@@ -1,19 +1,3 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-
-@Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [RouterOutlet],
-  template: `<router-outlet></router-outlet>`,
-  styles: [`
-    :host {
-      display: block;
-      min-height: 100vh;
-      background-color: #f8fafc;
-    }
-  `]
-})
-export class AppComponent {
-  title = 'frontend_angular';
-}
+// This file is deprecated. Use app.component.ts instead.
+// You can safely delete this file.
+export { AppComponent } from './app.component';

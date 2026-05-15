@@ -10,8 +10,8 @@ import { ThemeService } from '../../core/services/theme.service';
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
-  templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.css']
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
   constats: Constat[] = [];

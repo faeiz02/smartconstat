@@ -11,8 +11,8 @@ import { ThemeService } from '../../core/services/theme.service';
   selector: 'app-constat-detail',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
-  templateUrl: './constat-detail.html',
-  styleUrls: ['./constat-detail.css']
+  templateUrl: './constat-detail.component.html',
+  styleUrls: ['./constat-detail.component.css']
 })
 export class ConstatDetailComponent implements OnInit {
   constat: Constat | null = null;
